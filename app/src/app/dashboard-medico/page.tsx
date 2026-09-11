@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, clearCurrentUser } from "@/lib/userDatabase";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { getSession, removeSession } from "@/lib/authSession";
 
 const especialidades = [
   { nome: "Clínica Geral", quantidade: 42 },
@@ -29,10 +29,13 @@ export default function DashboardMedicoPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [isMedico, setIsMedico] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setIsMedico(user?.role === "medico");
+    const session = getSession();
+    const allowed = Boolean(session?.token && session.role === "MEDICO");
+    setIsMedico(allowed);
+    setUserName(allowed ? session?.nome ?? null : null);
     setCheckedAuth(true);
   }, []);
 
@@ -43,7 +46,7 @@ export default function DashboardMedicoPage() {
   }, [checkedAuth, isMedico, router]);
 
   const handleLogout = () => {
-    clearCurrentUser();
+    removeSession();
     router.push("/");
   };
 
@@ -77,7 +80,7 @@ export default function DashboardMedicoPage() {
           <div>
             <p className="text-sm font-semibold text-indigo-600">Painel do médico</p>
             <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Visão geral da UBS
+              {userName ? `Olá, ${userName}!` : "Visão geral da UBS"}
             </h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
               Acompanhe a demanda por especialidade e as consultas do dia.

@@ -82,14 +82,13 @@ export default function AdministracaoPage() {
           <ThemeToggle />
         </header>
 
-                <section className="mt-8 grid grid-cols-2 gap-4">
+                <section className="mt-8 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
           {dadosSucesso.map((item) => (
-            <div
-              key={item.label}
-              className="flex h-24 flex-col items-center justify-center rounded-2xl bg-white p-5 text-center shadow-lg dark:bg-zinc-950"
-            >
-              <p className="text-2xl font-semibold text-indigo-600">{item.valor}</p>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.label}</p>
+            <div key={item.label} className="flex-1 px-6 py-4 sm:min-w-[160px]">
+              <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                {item.label}
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-indigo-600">{item.valor}</p>
             </div>
           ))}
         </section>

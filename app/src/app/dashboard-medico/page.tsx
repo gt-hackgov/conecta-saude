@@ -52,6 +52,10 @@ export default function DashboardMedicoPage() {
     router.push("/");
   };
 
+  const openFicha = (paciente: string) => {
+    router.push(`/dashboard-medico/paciente?nome=${encodeURIComponent(paciente)}`);
+  };
+
   const maxQuantidade = Math.max(...especialidades.map((e) => e.quantidade));
   const handleExportarTriagem = () => {
     const pacientesAltoRisco = consultasHoje.filter((c) => c.risco === "Alto");
@@ -155,7 +159,8 @@ export default function DashboardMedicoPage() {
                 <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
                   <th className="py-2 pr-4">Paciente</th>
                   <th className="py-2 pr-4">Horário</th>
-                  <th className="py-2">Risco de falta</th>
+                  <th className="py-2 pr-4">Risco de falta</th>
+                  <th className="py-2">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -168,17 +173,32 @@ export default function DashboardMedicoPage() {
                   .map((consulta) => (
                     <tr key={`${consulta.paciente}-${consulta.horario}`}>
                       <td className="py-3 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
-                        {consulta.paciente}
+                        <button
+                          type="button"
+                          onClick={() => openFicha(consulta.paciente)}
+                          className="text-left font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                        >
+                          {consulta.paciente}
+                        </button>
                       </td>
                       <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">
                         {consulta.horario}
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 pr-4">
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-semibold ${riscoStyles[consulta.risco]}`}
                         >
                           Risco {consulta.risco}
                         </span>
+                      </td>
+                      <td className="py-3">
+                        <button
+                          type="button"
+                          onClick={() => openFicha(consulta.paciente)}
+                          className="whitespace-nowrap rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                        >
+                          Ver ficha
+                        </button>
                       </td>
                     </tr>
                   ))}

@@ -30,6 +30,8 @@ export default function DashboardMedicoPage() {
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [isMedico, setIsMedico] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+  const [filtroRisco, setFiltroRisco] = useState<"Todos" | "Baixo" | "Médio" | "Alto">("Todos");
 
   useEffect(() => {
     const session = getSession();
@@ -48,6 +50,10 @@ export default function DashboardMedicoPage() {
   const handleLogout = () => {
     removeSession();
     router.push("/");
+  };
+
+  const openFicha = (paciente: string) => {
+    router.push(`/dashboard-medico/paciente?nome=${encodeURIComponent(paciente)}`);
   };
 
   const maxQuantidade = Math.max(...especialidades.map((e) => e.quantidade));
@@ -109,34 +115,6 @@ export default function DashboardMedicoPage() {
         </header>
 
         <section className="mt-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Volume de agendamentos por especialidade
-          </h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Últimos 30 dias (dados de exemplo)
-          </p>
-
-                    <div className="mt-6 flex items-end gap-6">
-            {especialidades.map((item) => (
-              <div key={item.nome} className="flex flex-1 flex-col items-center gap-2">
-                <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {item.quantidade}
-                </span>
-                <div className="flex h-32 w-full items-end">
-                  <div
-                    className="w-full rounded-t-lg bg-indigo-500 dark:bg-indigo-600"
-                    style={{ height: `${(item.quantidade / maxQuantidade) * 100}%` }}
-                  />
-                </div>
-                <span className="text-center text-xs text-zinc-600 dark:text-zinc-400">
-                  {item.nome}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-                <section className="mt-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
@@ -156,40 +134,102 @@ export default function DashboardMedicoPage() {
             </button>
           </div>
 
-          <div className="mt-6 divide-y divide-zinc-100 dark:divide-zinc-800">
-            {consultasHoje.map((consulta) => (
-              <div
-                key={`${consulta.paciente}-${consulta.horario}`}
-                className="flex items-center justify-between py-4"
-              >
-                <div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push(`/dashboard-medico/paciente?nome=${encodeURIComponent(consulta.paciente)}`)
-                    }
-                    className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                  >
-                    {consulta.paciente}
-                  </button>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">{consulta.horario}</p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar paciente..."
+              className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm outline-none focus:border-indigo-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 sm:w-64"
+            />
+            <select
+              value={filtroRisco}
+              onChange={(e) => setFiltroRisco(e.target.value as typeof filtroRisco)}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm outline-none focus:border-indigo-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            >
+              <option value="Todos">Todos os riscos</option>
+              <option value="Baixo">Risco Baixo</option>
+              <option value="Médio">Risco Médio</option>
+              <option value="Alto">Risco Alto</option>
+            </select>
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+                  <th className="py-2 pr-4">Paciente</th>
+                  <th className="py-2 pr-4">Horário</th>
+                  <th className="py-2 pr-4">Risco de falta</th>
+                  <th className="py-2">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {consultasHoje
+                  .filter(
+                    (c) =>
+                      c.paciente.toLowerCase().includes(busca.toLowerCase()) &&
+                      (filtroRisco === "Todos" || c.risco === filtroRisco)
+                  )
+                  .map((consulta) => (
+                    <tr key={`${consulta.paciente}-${consulta.horario}`}>
+                      <td className="py-3 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
+                        <button
+                          type="button"
+                          onClick={() => openFicha(consulta.paciente)}
+                          className="text-left font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                        >
+                          {consulta.paciente}
+                        </button>
+                      </td>
+                      <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">
+                        {consulta.horario}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${riscoStyles[consulta.risco]}`}
+                        >
+                          Risco {consulta.risco}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <button
+                          type="button"
+                          onClick={() => openFicha(consulta.paciente)}
+                          className="whitespace-nowrap rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                        >
+                          Ver ficha
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Volume de agendamentos por especialidade
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Últimos 30 dias (dados de exemplo)
+          </p>
+
+          <div className="mt-6 flex items-end gap-6">
+            {especialidades.map((item) => (
+              <div key={item.nome} className="flex flex-1 flex-col items-center gap-2">
+                <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  {item.quantidade}
+                </span>
+                <div className="flex h-32 w-full items-end">
+                  <div
+                    className="w-full rounded-t-lg bg-indigo-500 dark:bg-indigo-600"
+                    style={{ height: `${(item.quantidade / maxQuantidade) * 100}%` }}
+                  />
                 </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${riscoStyles[consulta.risco]}`}
-                  >
-                    Risco {consulta.risco}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push(`/dashboard-medico/paciente?nome=${encodeURIComponent(consulta.paciente)}`)
-                    }
-                    className="whitespace-nowrap rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
-                  >
-                    Ver ficha
-                  </button>
-                </div>
+                <span className="text-center text-xs text-zinc-600 dark:text-zinc-400">
+                  {item.nome}
+                </span>
               </div>
             ))}
           </div>

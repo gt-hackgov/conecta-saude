@@ -240,7 +240,7 @@ export function LoginModal({ open, onClose }: Props) {
       }
 
       if (data.role === "ADMIN") {
-        router.push("/admin/usuarios");
+        router.push("/dashboard-administrador");
         onClose();
         return;
       }

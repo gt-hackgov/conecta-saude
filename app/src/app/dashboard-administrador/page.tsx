@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/userDatabase";
+import { getSession, removeSession } from "@/lib/authSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const dadosSucesso = [
@@ -26,24 +26,24 @@ const insights = [
   "Saúde Mental é a menor fatia (8%), mas pode refletir dificuldade de acesso ou estigma — um canal digital discreto tende a aumentar a procura real.",
 ];
 
-export default function AdministracaoPage() {
+export default function DashboardAdministradorPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
-  const [isMedico, setIsMedico] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setIsMedico(user?.role === "medico");
+    const session = getSession();
+    setIsAdmin(Boolean(session?.token && session.role === "ADMIN"));
     setCheckedAuth(true);
   }, []);
 
   useEffect(() => {
-    if (checkedAuth && !isMedico) {
+    if (checkedAuth && !isAdmin) {
       router.replace("/");
     }
-  }, [checkedAuth, isMedico, router]);
+  }, [checkedAuth, isAdmin, router]);
 
-  if (!checkedAuth || !isMedico) {
+  if (!checkedAuth || !isAdmin) {
     return null;
   }
 
@@ -65,21 +65,33 @@ export default function AdministracaoPage() {
       <div className="mx-auto w-full max-w-6xl">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard-medico")}
-              className="text-xs font-semibold text-indigo-600 hover:underline"
-            >
-              ← Voltar ao painel
-            </button>
-            <h1 className="mt-1 text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
+            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
               Administração da UBS
             </h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
               Indicadores de uso do sistema e análise de demanda por especialidade.
             </p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/admin/usuarios")}
+              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+            >
+              Cadastrar usuários
+            </button>
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => {
+                removeSession();
+                router.push("/");
+              }}
+              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+            >
+              Sair
+            </button>
+          </div>
         </header>
 
                 <section className="mt-8 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">

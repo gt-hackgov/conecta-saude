@@ -93,16 +93,6 @@ export default function DashboardMedicoPage() {
             </p>
           </div>
                     <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard-medico/administracao")}
-              aria-label="Administração da UBS"
-              className="rounded-xl border border-zinc-200 bg-white p-2 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-zinc-700 dark:text-zinc-300">
-                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-            </button>
             <ThemeToggle />
             <button
               type="button"

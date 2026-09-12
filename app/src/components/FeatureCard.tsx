@@ -25,9 +25,6 @@ export function FeatureCard({ title, description, onClick, icon }: FeatureCardPr
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
         </div>
       </div>
-      <span className="mt-4 inline-flex items-center text-sm font-semibold text-indigo-600 transition group-hover:text-indigo-800 dark:text-indigo-400">
-        Acessar <span className="ml-1">→</span>
-      </span>
     </button>
   );
 }

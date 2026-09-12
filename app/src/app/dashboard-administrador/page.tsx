@@ -188,7 +188,7 @@ export default function DashboardAdministradorPage() {
           </table>
         </section>
 
-        <section className="mt-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
+        <section className="mt-16">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             Insights para gestão
           </h2>

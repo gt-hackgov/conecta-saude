@@ -163,16 +163,33 @@ export default function DashboardMedicoPage() {
                 className="flex items-center justify-between py-4"
               >
                 <div>
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      router.push(`/dashboard-medico/paciente?nome=${encodeURIComponent(consulta.paciente)}`)
+                    }
+                    className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                  >
                     {consulta.paciente}
-                  </p>
+                  </button>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">{consulta.horario}</p>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${riscoStyles[consulta.risco]}`}
-                >
-                  Risco {consulta.risco}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${riscoStyles[consulta.risco]}`}
+                  >
+                    Risco {consulta.risco}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      router.push(`/dashboard-medico/paciente?nome=${encodeURIComponent(consulta.paciente)}`)
+                    }
+                    className="whitespace-nowrap rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                  >
+                    Ver ficha
+                  </button>
+                </div>
               </div>
             ))}
           </div>

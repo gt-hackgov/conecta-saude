@@ -239,6 +239,12 @@ export function LoginModal({ open, onClose }: Props) {
         return;
       }
 
+      if (data.role === "ADMIN") {
+        router.push("/admin/usuarios");
+        onClose();
+        return;
+      }
+
       setNotice("Este perfil ainda não possui área disponível na interface.");
     } catch {
       setError("Não foi possível conectar ao serviço. Tente novamente.");

@@ -65,21 +65,24 @@ export default function AdministracaoPage() {
       <div className="mx-auto w-full max-w-6xl">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard-medico")}
-              className="text-xs font-semibold text-indigo-600 hover:underline"
-            >
-              ← Voltar ao painel
-            </button>
-            <h1 className="mt-1 text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
+            <p className="text-sm font-semibold text-indigo-600">Administração</p>
+            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
               Administração da UBS
             </h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
               Indicadores de uso do sistema e análise de demanda por especialidade.
             </p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard-medico")}
+              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+            >
+              Voltar ao painel
+            </button>
+            <ThemeToggle />
+          </div>
         </header>
 
                 <section className="mt-8 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
@@ -92,11 +95,9 @@ export default function AdministracaoPage() {
             </div>
           ))}
         </section>
-        <p className="mt-2 text-xs text-zinc-400">
-          Dados de exemplo — em produção, viriam da API e do banco de dados reais.
-        </p>
 
-        <section className="mt-8 grid gap-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
+
+        <section className="mt-16 grid gap-16">
           <div>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               Demanda por especialidade — barras
@@ -156,7 +157,7 @@ export default function AdministracaoPage() {
           </div>
         </section>
 
-        <section className="mt-8 overflow-x-auto rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
+        <section className="mt-16 overflow-x-auto rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             Tabela de frequência
           </h2>

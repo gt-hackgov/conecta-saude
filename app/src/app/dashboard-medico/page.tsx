@@ -121,8 +121,7 @@ export default function DashboardMedicoPage() {
                 Consultas de hoje
               </h2>
               <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                Risco de falta calculado por modelo de IA (dados de exemplo — modelo real é uma
-                evolução futura do projeto)
+                Risco de falta calculado por modelo de IA
               </p>
             </div>
             <button
@@ -207,12 +206,12 @@ export default function DashboardMedicoPage() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
+        <section className="mt-16">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             Volume de agendamentos por especialidade
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Últimos 30 dias (dados de exemplo)
+            Últimos 30 dias
           </p>
 
           <div className="mt-6 flex items-end gap-6">

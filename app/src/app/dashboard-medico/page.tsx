@@ -111,8 +111,7 @@ export default function DashboardMedicoPage() {
                 Consultas de hoje
               </h2>
               <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                Risco de falta calculado por modelo de IA (dados de exemplo — modelo real é uma
-                evolução futura do projeto)
+                Risco de falta calculado por modelo de IA
               </p>
             </div>
             <button
@@ -197,29 +196,29 @@ export default function DashboardMedicoPage() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
+        <section className="mt-16">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             Volume de agendamentos por especialidade
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Últimos 30 dias (dados de exemplo)
+            Últimos 30 dias
           </p>
 
-          <div className="mt-6 flex items-end gap-6">
+          <div className="mt-6 space-y-3">
             {especialidades.map((item) => (
-              <div key={item.nome} className="flex flex-1 flex-col items-center gap-2">
-                <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {item.quantidade}
-                </span>
-                <div className="flex h-32 w-full items-end">
+              <div key={item.nome}>
+                <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
+                  <span>{item.nome}</span>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    {item.quantidade}
+                  </span>
+                </div>
+                <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                   <div
-                    className="w-full rounded-t-lg bg-indigo-500 dark:bg-indigo-600"
-                    style={{ height: `${(item.quantidade / maxQuantidade) * 100}%` }}
+                    className="h-full rounded-full bg-indigo-500 dark:bg-indigo-600"
+                    style={{ width: `${(item.quantidade / maxQuantidade) * 100}%` }}
                   />
                 </div>
-                <span className="text-center text-xs text-zinc-600 dark:text-zinc-400">
-                  {item.nome}
-                </span>
               </div>
             ))}
           </div>

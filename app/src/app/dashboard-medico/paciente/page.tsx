@@ -114,17 +114,19 @@ function FichaPacienteContent() {
       <div className="mx-auto w-full max-w-4xl">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
           <div>
+            <p className="text-sm font-semibold text-indigo-600">Ficha do paciente</p>
+            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">{nome}</h1>
+          </div>
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => router.push("/dashboard-medico")}
-              className="text-xs font-semibold text-indigo-600 hover:underline"
+              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
             >
-              ← Voltar ao painel
+              Voltar ao painel
             </button>
-            <h1 className="mt-1 text-3xl font-semibold text-zinc-900 dark:text-zinc-50">{nome}</h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Ficha do paciente</p>
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
         </header>
 
         <section className="mt-6 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
@@ -189,8 +191,7 @@ function FichaPacienteContent() {
         </section>
 
         <p className="mt-4 text-xs text-zinc-400">
-          Dados de exemplo — CPF exibido de forma mascarada, seguindo boa prática de proteção de
-          dados sensíveis.
+          CPF exibido de forma mascarada, seguindo boa prática de proteção de dados sensíveis.
         </p>
       </div>
     </div>

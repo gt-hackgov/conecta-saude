@@ -243,10 +243,8 @@ export default function DashboardPage() {
             onClick={() => router.push("/agendar-consulta")}
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 3v6a3 3 0 0 0 6 0V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <path d="M17 3v4.5a5 5 0 0 1-10 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <circle cx="18.5" cy="14.5" r="2.5" stroke="currentColor" strokeWidth="1.6"/>
-                <path d="M13 12.5v2A5.5 5.5 0 0 0 16.2 19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.6"/>
+                <path d="M12 7.5v9M7.5 12h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
             }
           />

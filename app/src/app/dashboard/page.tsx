@@ -5,40 +5,126 @@ import { useRouter } from "next/navigation";
 import { FeatureCard } from "@/components/FeatureCard";
 import { ChatModal } from "@/components/ChatModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { getSession, removeSession } from "@/lib/authSession";
+
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+};
+
+function extractNotificationsError(payload: unknown, status: number): string {
+  if (status === 403) return "Acesso não permitido às notificações.";
+  if (status >= 500) return "Erro ao carregar notificações.";
+
+  if (payload && typeof payload === "object") {
+    const data = payload as {
+      message?: unknown;
+      error?: unknown;
+    };
+
+    if (typeof data.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+
+    if (typeof data.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+  }
+
+  return "Não foi possível carregar as notificações.";
+}
+
+async function readErrorPayload(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
 
 export default function DashboardPage() {
   const router = useRouter();
-      const [userName, setUserName] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [checkedAuth, setCheckedAuth] = useState(false);
+  const [isPaciente, setIsPaciente] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem("saudeDigitalUser");
-    if (raw) {
-      try {
-        const user = JSON.parse(raw);
-        setUserName(user.username ?? "Usuário");
-      } catch {
-        setUserName(null);
-      }
-    }
+    const session = getSession();
+    const allowed = Boolean(session?.token && session.role === "PACIENTE");
+    setIsPaciente(allowed);
+    setUserName(allowed ? session?.nome ?? null : null);
     setCheckedAuth(true);
   }, []);
     
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [notificationsError, setNotificationsError] = useState("");
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const displayName = useMemo(() => {
-    if (!userName) return "Usuário";
-    return userName.split("@")[0];
-  }, [userName]);
+  const displayName = useMemo(() => userName ?? "Usuário", [userName]);
 
-    useEffect(() => {
-    if (checkedAuth && !userName) {
+  useEffect(() => {
+    if (checkedAuth && !isPaciente) {
       router.replace("/");
     }
-  }, [checkedAuth, userName, router]);
+  }, [checkedAuth, isPaciente, router]);
+
+  useEffect(() => {
+    if (!checkedAuth || !isPaciente) return;
+
+    const session = getSession();
+    if (!session?.token || session.role !== "PACIENTE") {
+      return;
+    }
+
+    const loadNotifications = async () => {
+      setNotificationsLoading(true);
+      setNotificationsError("");
+
+      try {
+        const response = await fetch("/api/notifications", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.token}`,
+          },
+        });
+
+        if (response.status === 401) {
+          removeSession();
+          router.replace("/");
+          return;
+        }
+
+        if (!response.ok) {
+          const payload = await readErrorPayload(response);
+          setNotificationsError(extractNotificationsError(payload, response.status));
+          setNotifications([]);
+          return;
+        }
+
+        const data = (await response.json()) as { notifications?: unknown };
+        const list = Array.isArray(data.notifications)
+          ? (data.notifications as Notification[])
+          : [];
+        setNotifications(list);
+      } catch {
+        setNotificationsError("Não foi possível carregar as notificações.");
+        setNotifications([]);
+      } finally {
+        setNotificationsLoading(false);
+      }
+    };
+
+    loadNotifications();
+  }, [checkedAuth, isPaciente, router]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,17 +140,21 @@ export default function DashboardPage() {
 
   const welcomeMessage = useMemo(() => {
     if (!userName) return "Olá";
-    return `Olá, ${userName.split("@")[0]}!`;
+    return `Olá, ${userName}!`;
   }, [userName]);
 
   const handleLogout = () => {
-    localStorage.removeItem("saudeDigitalUser");
+    removeSession();
     router.push("/");
   };
 
   const handleAction = (action: string) => {
     alert(`Função: ${action} (demo)`);
   };
+
+  if (!checkedAuth || !isPaciente) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 dark:bg-none dark:bg-zinc-900">
@@ -108,28 +198,39 @@ export default function DashboardPage() {
               className="absolute right-24 mt-16 w-64 rounded-xl bg-white shadow-lg dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700"
             >
               <ul className="py-2">
-                <li>
-                  <button
-                    onClick={() => {
-                      setNotificationModalOpen(true);
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                  >
-                    Previna-se da Dengue!
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setNotificationModalOpen(true);
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                  >
-                    Sua consulta está próxima: Faltam 2 dias!
-                  </button>
-                </li>
+                {notificationsLoading ? (
+                  <li className="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-200">
+                    Carregando...
+                  </li>
+                ) : notificationsError ? (
+                  <li className="px-4 py-2 text-sm text-red-600 dark:text-red-300">
+                    {notificationsError}
+                  </li>
+                ) : notifications.length === 0 ? (
+                  <li className="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-200">
+                    Nenhuma notificação disponível.
+                  </li>
+                ) : (
+                  notifications.map((notification) => (
+                    <li key={notification.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedNotification(notification);
+                          setDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                      >
+                        <span className="block">{notification.title}</span>
+                        {notification.time ? (
+                          <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">
+                            {notification.time}
+                          </span>
+                        ) : null}
+                      </button>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
           )}
@@ -219,25 +320,19 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {notificationModalOpen && (
+      {selectedNotification ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl dark:bg-zinc-900">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Notificação</h3>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Previna-se da Dengue!{" "}
-              <button
-                onClick={() => {
-                  setIsChatOpen(true);
-                  setNotificationModalOpen(false);
-                }}
-                className="text-indigo-600 underline hover:no-underline"
-              >
-                Clique aqui para saber como
-              </button>
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              {selectedNotification.title}
+            </h3>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+              {selectedNotification.message}
             </p>
             <div className="mt-4 flex justify-end">
               <button
-                onClick={() => setNotificationModalOpen(false)}
+                type="button"
+                onClick={() => setSelectedNotification(null)}
                 className="rounded-xl bg-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
               >
                 Fechar
@@ -245,7 +340,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       <ChatModal open={isChatOpen} onClose={() => setIsChatOpen(false)} userName={displayName} />
     </div>

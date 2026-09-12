@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, removeSession } from "@/lib/authSession";
 
 const locations = [
   "UBS Centro",
@@ -18,6 +19,74 @@ const specialties = [
   "Cardiologia",
 ];
 
+function formatFieldErrors(fieldErrors: unknown): string | null {
+  if (!fieldErrors) return null;
+
+  if (Array.isArray(fieldErrors)) {
+    const messages = fieldErrors
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object" && "message" in item) {
+          const message = (item as { message?: unknown }).message;
+          return typeof message === "string" ? message : null;
+        }
+        return null;
+      })
+      .filter((message): message is string => Boolean(message?.trim()));
+
+    return messages.length ? messages.join(" ") : null;
+  }
+
+  if (typeof fieldErrors === "object") {
+    const messages = Object.values(fieldErrors as Record<string, unknown>)
+      .map((value) => {
+        if (typeof value === "string") return value;
+        if (Array.isArray(value)) {
+          return value.filter((item) => typeof item === "string").join(" ");
+        }
+        return null;
+      })
+      .filter((message): message is string => Boolean(message?.trim()));
+
+    return messages.length ? messages.join(" ") : null;
+  }
+
+  return null;
+}
+
+function extractErrorMessage(payload: unknown, status: number): string {
+  if (payload && typeof payload === "object") {
+    const data = payload as {
+      message?: unknown;
+      fieldErrors?: unknown;
+    };
+
+    const fieldErrorsMessage = formatFieldErrors(data.fieldErrors);
+    if (fieldErrorsMessage) return fieldErrorsMessage;
+
+    if (typeof data.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+  }
+
+  if (status === 400) return "Dados inválidos.";
+  if (status === 403) return "Acesso não permitido.";
+  if (status === 404) return "Não foi possível concluir o agendamento.";
+  if (status >= 500) return "Erro interno.";
+  return "Não foi possível agendar a consulta. Tente novamente.";
+}
+
+async function readErrorPayload(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export default function SchedulePage() {
   const router = useRouter();
   const [date, setDate] = useState("");
@@ -25,34 +94,72 @@ export default function SchedulePage() {
   const [location, setLocation] = useState(locations[0]);
   const [specialty, setSpecialty] = useState(specialties[0]);
   const [notes, setNotes] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (loading) return;
+
     if (!date || !time || !location || !specialty) {
       setError("Por favor, preencha todos os campos obrigatórios.");
-      setSuccess(false);
+      setSuccessMessage("");
       return;
     }
 
-    const appointment = {
-      date,
-      time,
-      location,
-      specialty,
-      notes,
-      createdAt: new Date().toISOString(),
-    };
-
-    if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem("saudeAppointments");
-      const current = stored ? JSON.parse(stored) : [];
-      window.localStorage.setItem("saudeAppointments", JSON.stringify([...current, appointment]));
+    const session = getSession();
+    if (!session?.token || session.role !== "PACIENTE") {
+      router.replace("/");
+      return;
     }
 
+    setLoading(true);
     setError("");
-    setSuccess(true);
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.token}`,
+        },
+        body: JSON.stringify({
+          date,
+          time,
+          location,
+          specialty,
+          notes,
+        }),
+      });
+
+      if (response.status === 401) {
+        removeSession();
+        setError("Sessão expirada ou inválida.");
+        router.replace("/");
+        return;
+      }
+
+      if (response.status !== 201) {
+        const payload = await readErrorPayload(response);
+        setError(extractErrorMessage(payload, response.status));
+        return;
+      }
+
+      const data = (await response.json()) as { message?: unknown };
+      const message =
+        typeof data.message === "string" && data.message.trim()
+          ? data.message
+          : "Consulta agendada com sucesso! Verifique seus dados no painel.";
+
+      setSuccessMessage(message);
+      setNotes("");
+    } catch {
+      setError("Não foi possível conectar ao serviço. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -140,17 +247,18 @@ export default function SchedulePage() {
           </label>
 
           {error ? <p className="text-sm text-red-600 dark:text-red-300">{error}</p> : null}
-          {success ? (
+          {successMessage ? (
             <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800 dark:border-green-700 dark:bg-green-900/20 dark:text-green-100">
-              Consulta agendada com sucesso! Verifique seus dados no painel.
+              {successMessage}
             </div>
           ) : null}
 
           <button
             type="submit"
-            className="w-full rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            disabled={loading}
+            className="w-full rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Agendar consulta
+            {loading ? "Agendando..." : "Agendar consulta"}
           </button>
         </form>
       </div>

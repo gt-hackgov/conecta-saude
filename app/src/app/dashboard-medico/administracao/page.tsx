@@ -58,8 +58,6 @@ export default function AdministracaoPage() {
     return `conic-gradient(${partes.join(", ")})`;
   })();
 
-  const maxAbsoluta = Math.max(...especialidades.map((e) => e.absoluta));
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 dark:bg-none dark:bg-zinc-900">
       <div className="mx-auto w-full max-w-6xl">
@@ -100,29 +98,26 @@ export default function AdministracaoPage() {
         <section className="mt-16 grid gap-16">
           <div>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Demanda por especialidade — barras
+              Demanda por especialidade
             </h2>
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               Amostra de 5.000 solicitações mensais
             </p>
-            <div className="mt-6 flex items-start gap-4">
+            <div className="mt-6 space-y-3">
               {especialidades.map((item) => (
-                <div key={item.nome} className="flex flex-1 flex-col items-center gap-2">
-                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-                    {item.absoluta}
-                  </span>
-                  <div className="flex h-32 w-full items-end">
+                <div key={item.nome}>
+                  <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
+                    <span>{item.nome}</span>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                      {item.relativa}%
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                     <div
-                      className="w-full rounded-t-lg"
-                      style={{
-                        height: `${(item.absoluta / maxAbsoluta) * 100}%`,
-                        backgroundColor: item.cor,
-                      }}
+                      className="h-full rounded-full"
+                      style={{ width: `${item.relativa}%`, backgroundColor: item.cor }}
                     />
                   </div>
-                  <span className="text-center text-[10px] leading-tight text-zinc-600 dark:text-zinc-400">
-                    {item.nome}
-                  </span>
                 </div>
               ))}
             </div>

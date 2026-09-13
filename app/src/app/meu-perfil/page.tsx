@@ -63,6 +63,22 @@ export default function MeuPerfilPage() {
             {roleLabel[session.role] ?? session.role}
           </p>
         </section>
+
+        {session.role === "PACIENTE" ? (
+          <button
+            type="button"
+            onClick={() => router.push("/minha-ficha-saude")}
+            className="mt-6 flex w-full items-center justify-between rounded-2xl bg-white p-6 text-left shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+          >
+            <div>
+              <p className="font-semibold text-zinc-900 dark:text-zinc-100">Minha ficha de saúde</p>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                Tipo sanguíneo, alergias, dependentes e mais.
+              </p>
+            </div>
+            <span className="text-indigo-600 dark:text-indigo-400">→</span>
+          </button>
+        ) : null}
       </div>
 
       <BottomNav />

@@ -12,6 +12,15 @@ type Paciente = {
   telefone: string;
   endereco: string;
   historico: { data: string; especialidade: string; status: "Compareceu" | "Faltou" }[];
+  tipoSanguineo: string;
+  doadorSangue: boolean;
+  doadorOrgaos: boolean;
+  religiao: string;
+  alergias: string[];
+  atividadeFisica: string;
+  condicaoCardiovascular: string;
+  statusSorologico: string;
+  contatoEmergencia: { nome: string; parentesco: string; telefone: string };
 };
 
 const pacientes: Record<string, Paciente> = {
@@ -24,6 +33,15 @@ const pacientes: Record<string, Paciente> = {
       { data: "10/08/2026", especialidade: "Clínica Geral", status: "Compareceu" },
       { data: "22/05/2026", especialidade: "Cardiologia", status: "Compareceu" },
     ],
+    tipoSanguineo: "O+",
+    doadorSangue: true,
+    doadorOrgaos: true,
+    religiao: "Não informado",
+    alergias: ["Dipirona"],
+    atividadeFisica: "Moderadamente ativa",
+    condicaoCardiovascular: "Nenhuma relatada",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "João Silva", parentesco: "Cônjuge", telefone: "(11) 97777-2222" },
   },
   "João Souza": {
     cpf: "98765432100",
@@ -34,6 +52,15 @@ const pacientes: Record<string, Paciente> = {
       { data: "30/07/2026", especialidade: "Clínica Geral", status: "Faltou" },
       { data: "18/04/2026", especialidade: "Ortopedia", status: "Compareceu" },
     ],
+    tipoSanguineo: "A-",
+    doadorSangue: false,
+    doadorOrgaos: false,
+    religiao: "Testemunha de Jeová",
+    alergias: [],
+    atividadeFisica: "Sedentário",
+    condicaoCardiovascular: "Hipertensão controlada",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "Rita Souza", parentesco: "Cônjuge", telefone: "(11) 97777-9999" },
   },
   "Ana Costa": {
     cpf: "45678912300",
@@ -41,6 +68,15 @@ const pacientes: Record<string, Paciente> = {
     telefone: "(11) 96666-4321",
     endereco: "Rua das Orquídeas, 112 — Parque das Flores, São Paulo/SP",
     historico: [{ data: "05/06/2026", especialidade: "Dermatologia", status: "Compareceu" }],
+    tipoSanguineo: "B+",
+    doadorSangue: true,
+    doadorOrgaos: false,
+    religiao: "Católica",
+    alergias: ["Amoxicilina", "Poeira"],
+    atividadeFisica: "Ativa",
+    condicaoCardiovascular: "Nenhuma relatada",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "Carlos Costa", parentesco: "Pai", telefone: "(11) 96666-8888" },
   },
   "Pedro Lima": {
     cpf: "32165498700",
@@ -51,6 +87,15 @@ const pacientes: Record<string, Paciente> = {
       { data: "12/07/2026", especialidade: "Cardiologia", status: "Faltou" },
       { data: "01/03/2026", especialidade: "Cardiologia", status: "Faltou" },
     ],
+    tipoSanguineo: "AB+",
+    doadorSangue: false,
+    doadorOrgaos: true,
+    religiao: "Não informado",
+    alergias: ["Penicilina"],
+    atividadeFisica: "Sedentário",
+    condicaoCardiovascular: "Arritmia leve",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "Ana Lima", parentesco: "Filha", telefone: "(11) 95555-3333" },
   },
 };
 
@@ -161,6 +206,12 @@ function FichaPacienteContent() {
           </h2>
           <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{paciente.telefone}</p>
           <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">{paciente.endereco}</p>
+          <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Contato de emergência</p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              {paciente.contatoEmergencia.nome} ({paciente.contatoEmergencia.parentesco}) — {paciente.contatoEmergencia.telefone}
+            </p>
+          </div>
         </section>
 
         <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
@@ -189,6 +240,51 @@ function FichaPacienteContent() {
               ))}
             </tbody>
           </table>
+        </section>
+
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Ficha de saúde
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Tipo sanguíneo</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.tipoSanguineo}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Doador de sangue / órgãos</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                {paciente.doadorSangue ? "Sangue" : "—"}{paciente.doadorSangue && paciente.doadorOrgaos ? " · " : ""}{paciente.doadorOrgaos ? "Órgãos" : paciente.doadorSangue ? "" : "Não é doador"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Religião (relevante p/ transfusão)</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.religiao}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Atividade física</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.atividadeFisica}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Alergias</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                {paciente.alergias.length > 0 ? paciente.alergias.join(", ") : "Nenhuma relatada"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Condição cardiovascular</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.condicaoCardiovascular}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+              Dado confidencial — acesso restrito ao profissional de saúde
+            </p>
+            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-200">
+              Status sorológico: {paciente.statusSorologico}
+            </p>
+          </div>
         </section>
 
         <p className="mt-4 text-xs text-zinc-400">

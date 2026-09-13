@@ -65,6 +65,7 @@ export function AuthCard() {
           <RegisterForm onRegistered={goToLogin} />
         ) : (
           <LoginForm
+            role={role}
             successMessage={successMessage}
             onClearSuccessMessage={() => setSuccessMessage("")}
           />

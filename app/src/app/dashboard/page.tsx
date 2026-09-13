@@ -161,10 +161,6 @@ export default function DashboardPage() {
     router.push("/");
   };
 
-  const handleAction = (action: string) => {
-    alert(`Função: ${action} (demo)`);
-  };
-
   if (!checkedAuth || !isPaciente) {
     return null;
   }
@@ -308,7 +304,7 @@ export default function DashboardPage() {
             <FeatureCard
               title="Agendar exame"
               description="Escolha o tipo de exame e o local de coleta."
-              onClick={() => handleAction("Agendar exame")}
+              onClick={() => router.push("/agendar-exame")}
               icon={<TestTube className="size-5" aria-hidden="true" />}
             />
             <FeatureCard

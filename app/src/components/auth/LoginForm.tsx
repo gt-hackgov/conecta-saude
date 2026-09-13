@@ -6,18 +6,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import type { Role } from "@/components/auth/RoleSelector";
 import { saveSession } from "@/lib/authSession";
 import { registrarAuditoria } from "@/lib/auditLog";
 import { extractErrorMessage, formatCpf, isValidCpf, readErrorPayload } from "@/lib/authErrors";
 
 type Props = {
+  role: Role;
   successMessage?: string;
   onClearSuccessMessage?: () => void;
 };
 
+const ROLE_LABEL: Record<Role, string> = {
+  PACIENTE: "paciente",
+  MEDICO: "médico",
+  ADMIN: "administrador",
+};
+
+function apiRoleLabel(apiRole: string): string {
+  if (apiRole === "PACIENTE") return "paciente";
+  if (apiRole === "MEDICO") return "médico";
+  if (apiRole === "ADMIN") return "administrador";
+  return apiRole.toLowerCase();
+}
+
 const fieldClassName = "h-11 rounded-xl px-4 text-sm";
 
-export function LoginForm({ successMessage, onClearSuccessMessage }: Props) {
+export function LoginForm({ role, successMessage, onClearSuccessMessage }: Props) {
   const router = useRouter();
   const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
@@ -81,10 +96,19 @@ export function LoginForm({ successMessage, onClearSuccessMessage }: Props) {
         return;
       }
 
+      const apiRole = String(data.role);
+
+      if (role !== apiRole) {
+        setError(
+          `Esse CPF pertence ao perfil de ${apiRoleLabel(apiRole)}, não a ${ROLE_LABEL[role]}. Volte e escolha o perfil correto.`
+        );
+        return;
+      }
+
       saveSession({
         usuarioId: String(data.usuarioId),
         nome: String(data.nome),
-        role: String(data.role),
+        role: apiRole,
         token: String(data.token),
       });
 

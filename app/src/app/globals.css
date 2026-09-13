@@ -4,6 +4,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  --background-image-landing-photo: url("/landing-background.png");
+  --background-image-dashboard-care: url("/dashboard-care.png");
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -83,10 +85,15 @@ html[data-colorblind="tritanopia"] body {
   filter: url(#filtro-tritanopia);
 }
 
-:root {
+/* Imagens fora do :root de tema — o Tailwind v4 descarta custom props
+   não reconhecidas quando misturadas com tokens de tema em :root. */
+html {
   --landing-photo: url("/landing-background.png");
   --dashboard-hero: none;
   --dashboard-care: url("/dashboard-care.png");
+}
+
+:root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

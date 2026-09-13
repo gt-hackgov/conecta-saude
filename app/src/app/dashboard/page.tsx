@@ -258,7 +258,7 @@ export default function DashboardPage() {
         <section className="relative mt-6 overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-indigo-500 to-blue-500 px-8 py-12 text-white shadow-[0_30px_70px_-35px_rgba(79,70,229,0.7)] sm:px-12 sm:py-16">
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-[image:var(--dashboard-hero)] bg-cover bg-center opacity-30 mix-blend-overlay"
+            className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay"
           />
           <div
             aria-hidden="true"
@@ -350,7 +350,7 @@ export default function DashboardPage() {
           <div className="relative min-h-56 bg-gradient-to-br from-indigo-100 via-sky-100 to-indigo-50 dark:from-indigo-950/40 dark:via-sky-950/30 dark:to-zinc-900">
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-[image:var(--dashboard-care)] bg-cover bg-center"
+              className="absolute inset-0 bg-dashboard-care bg-cover bg-center"
             />
           </div>
         </section>

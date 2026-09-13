@@ -11,6 +11,19 @@ type Props = {
 };
 
 type Mode = "login" | "register";
+type Role = "paciente" | "medico" | "administrador";
+
+const ROLE_TO_API: Record<Role, string> = {
+  paciente: "PACIENTE",
+  medico: "MEDICO",
+  administrador: "ADMIN",
+};
+
+const ROLE_LABEL: Record<Role, string> = {
+  paciente: "paciente",
+  medico: "médico",
+  administrador: "administrador",
+};
 
 const inputClassName =
   "mt-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-indigo-400";
@@ -93,6 +106,7 @@ async function readErrorPayload(response: Response): Promise<unknown> {
 
 export function LoginModal({ open, onClose }: Props) {
   const router = useRouter();
+  const [role, setRole] = useState<Role | null>(null);
   const [mode, setMode] = useState<Mode>("login");
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
@@ -132,7 +146,14 @@ export function LoginModal({ open, onClose }: Props) {
   };
 
   useEffect(() => {
+    setError("");
+    setNotice("");
+    setSuccess("");
+  }, [role]);
+
+  useEffect(() => {
     if (!open) {
+      setRole(null);
       setMode("login");
       setNome("");
       setCpf("");
@@ -218,6 +239,15 @@ export function LoginModal({ open, onClose }: Props) {
 
       if (!data.usuarioId || !data.nome || !data.role || !data.token) {
         setError("Não foi possível entrar. Tente novamente.");
+        return;
+      }
+
+      if (role && ROLE_TO_API[role] !== String(data.role)) {
+        setError(
+          `Esse CPF pertence ao perfil de ${
+            data.role === "PACIENTE" ? "paciente" : data.role === "MEDICO" ? "médico" : "administrador"
+          }, não a ${ROLE_LABEL[role]}. Volte e escolha o perfil correto.`
+        );
         return;
       }
 
@@ -345,6 +375,53 @@ export function LoginModal({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
       >
+        {role === null ? (
+          <>
+            <header className="flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                  Como você quer entrar?
+                </h2>
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                  Escolha seu perfil para continuar.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                aria-label="Fechar modal"
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setRole("paciente")}
+                className="rounded-xl bg-indigo-600 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              >
+                Sou paciente
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("medico")}
+                className="rounded-xl bg-indigo-600 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              >
+                Sou médico
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("administrador")}
+                className="rounded-xl bg-indigo-600 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:col-span-2"
+              >
+                Sou administrador
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
         <header className="flex items-start justify-between">
           <div>
             {mode === "register" ? (
@@ -366,11 +443,19 @@ export function LoginModal({ open, onClose }: Props) {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                <button
+                  type="button"
+                  onClick={() => setRole(null)}
+                  className="text-xs font-semibold text-indigo-600 hover:underline"
+                  disabled={loading}
+                >
+                  ← Trocar perfil
+                </button>
+                <h2 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
                   Entrar com gov.br
                 </h2>
                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                  Faça login com sua conta gov.br para acessar os serviços.
+                  Faça login como {role ? ROLE_LABEL[role] : ""} com sua conta gov.br.
                 </p>
               </>
             )}
@@ -509,6 +594,8 @@ export function LoginModal({ open, onClose }: Props) {
               {loading ? "Criando conta..." : "Criar conta"}
             </button>
           </form>
+        )}
+          </>
         )}
       </div>
     </div>

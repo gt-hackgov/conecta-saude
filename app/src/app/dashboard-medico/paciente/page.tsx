@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession } from "@/lib/authSession";
+import { registrarAuditoria } from "@/lib/auditLog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -123,7 +124,16 @@ function FichaPacienteContent() {
     const session = getSession();
     setIsMedico(Boolean(session?.token && session.role === "MEDICO"));
     setCheckedAuth(true);
-  }, []);
+
+    if (session?.token && session.role === "MEDICO" && nome) {
+      registrarAuditoria({
+        ator: session.nome,
+        perfil: session.role,
+        acao: "CONSULTA_DADO_SENSIVEL",
+        alvo: `Ficha do paciente: ${nome}`,
+      });
+    }
+  }, [nome]);
 
   useEffect(() => {
     if (checkedAuth && !isMedico) {

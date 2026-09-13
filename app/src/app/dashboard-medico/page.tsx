@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getSession, removeSession } from "@/lib/authSession";
+import { registrarAuditoria } from "@/lib/auditLog";
 import { BottomNav } from "@/components/BottomNav";
 
 const especialidades = [
@@ -59,6 +60,16 @@ export default function DashboardMedicoPage() {
 
   const maxQuantidade = Math.max(...especialidades.map((e) => e.quantidade));
   const handleExportarTriagem = () => {
+    const session = getSession();
+    if (session?.token) {
+      registrarAuditoria({
+        ator: session.nome,
+        perfil: session.role,
+        acao: "EXPORTACAO_DADOS",
+        alvo: "Lista de triagem (CSV) - pacientes de risco alto",
+      });
+    }
+
     const pacientesAltoRisco = consultasHoje.filter((c) => c.risco === "Alto");
 
     const cabecalho = "Paciente;Horario;Risco";

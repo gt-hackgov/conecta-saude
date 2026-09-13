@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveSession } from "@/lib/authSession";
+import { registrarAuditoria } from "@/lib/auditLog";
 
 type Props = {
   open: boolean;
@@ -225,6 +226,13 @@ export function LoginModal({ open, onClose }: Props) {
         nome: String(data.nome),
         role: String(data.role),
         token: String(data.token),
+      });
+
+      registrarAuditoria({
+        ator: String(data.nome),
+        perfil: String(data.role),
+        acao: "LOGIN",
+        alvo: "Sistema Conecta Saúde",
       });
 
       if (data.role === "PACIENTE") {

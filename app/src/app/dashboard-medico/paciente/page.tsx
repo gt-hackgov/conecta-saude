@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession } from "@/lib/authSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BottomNav } from "@/components/BottomNav";
 
 type Paciente = {
   cpf: string;
@@ -110,7 +111,7 @@ function FichaPacienteContent() {
   const totalFaltas = paciente.historico.filter((h) => h.status === "Faltou").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 dark:bg-none dark:bg-zinc-900">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
       <div className="mx-auto w-full max-w-4xl">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -194,6 +195,8 @@ function FichaPacienteContent() {
           CPF exibido de forma mascarada, seguindo boa prática de proteção de dados sensíveis.
         </p>
       </div>
+
+      <BottomNav />
     </div>
   );
 }

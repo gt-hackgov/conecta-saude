@@ -6,6 +6,7 @@ import { FeatureCard } from "@/components/FeatureCard";
 import { ChatModal } from "@/components/ChatModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getSession, removeSession } from "@/lib/authSession";
+import { BottomNav } from "@/components/BottomNav";
 
 type Notification = {
   id: string;
@@ -157,7 +158,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 dark:bg-none dark:bg-zinc-900">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
       <div className="mx-auto w-full max-w-6xl">
         <header className="relative flex flex-col gap-6 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -306,7 +307,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="fixed bottom-6 right-6 z-40">
+      <div className="fixed bottom-24 right-6 z-40">
         <button
           onClick={() => setIsChatOpen(true)}
           className="rounded-full bg-indigo-600 p-4 text-white shadow-lg transition hover:bg-indigo-700"
@@ -341,6 +342,8 @@ export default function DashboardPage() {
       ) : null}
 
       <ChatModal open={isChatOpen} onClose={() => setIsChatOpen(false)} userName={displayName} />
+
+      <BottomNav />
     </div>
   );
 }

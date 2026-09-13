@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BottomNav } from "@/components/BottomNav";
 
 type StatusVacina = "Aplicada" | "Atrasada" | "Prevista";
 
@@ -39,7 +40,7 @@ export default function HistoricoVacinasPage() {
   const ultimaAplicacao = vacinas.find((v) => v.status === "Aplicada")?.data ?? "—";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 dark:bg-none dark:bg-zinc-900">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
       <div className="mx-auto w-full max-w-5xl">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -145,6 +146,8 @@ export default function HistoricoVacinasPage() {
           Dados de exemplo — em produção, viriam do prontuário eletrônico integrado ao e-SUS/RNDS.
         </p>
       </div>
+
+      <BottomNav />
     </div>
   );
 }

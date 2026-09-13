@@ -57,7 +57,7 @@ export function ChatModal({ open, onClose, userName }: Props) {
   };
 
   return (
-    <div className="fixed bottom-20 right-6 z-50">
+    <div className="fixed bottom-24 right-6 z-50">
       <div
         ref={modalRef}
         className="w-96 h-[28rem] rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900 flex flex-col"

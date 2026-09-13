@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ChevronRight } from "lucide-react";
 
 type FeatureCardProps = {
   title: string;
@@ -14,17 +15,25 @@ export function FeatureCard({ title, description, onClick, icon }: FeatureCardPr
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col items-start justify-between rounded-2xl border border-zinc-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
+      className="group flex w-full items-start gap-4 rounded-3xl bg-white/70 p-6 text-left ring-1 ring-zinc-900/5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_50px_-24px_rgba(15,23,42,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:bg-zinc-900/60 dark:ring-white/10 dark:hover:bg-zinc-900"
     >
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
-          {icon}
-        </div>
-        <div>
-          <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
-        </div>
-      </div>
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/25 transition duration-300 group-hover:scale-105">
+        {icon}
+      </span>
+
+      <span className="flex-1">
+        <span className="block text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          {title}
+        </span>
+        <span className="mt-1.5 block text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+          {description}
+        </span>
+      </span>
+
+      <ChevronRight
+        className="mt-1 size-4 shrink-0 text-zinc-400 transition duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
+        aria-hidden="true"
+      />
     </button>
   );
 }

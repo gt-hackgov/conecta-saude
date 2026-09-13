@@ -149,10 +149,6 @@ export default function DashboardPage() {
     router.push("/");
   };
 
-  const handleAction = (action: string) => {
-    alert(`Função: ${action} (demo)`);
-  };
-
   if (!checkedAuth || !isPaciente) {
     return null;
   }
@@ -263,7 +259,7 @@ export default function DashboardPage() {
           <FeatureCard
             title="Agendar exame"
             description="Escolha o tipo de exame e o local de coleta."
-            onClick={() => handleAction("Agendar exame")}
+            onClick={() => router.push("/agendar-exame")}
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>

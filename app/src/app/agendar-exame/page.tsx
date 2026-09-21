@@ -12,12 +12,12 @@ const locations = [
   "UBS Santa Maria",
 ];
 
-const specialties = [
-  "Clínica Geral",
-  "Pediatria",
-  "Ginecologia",
-  "Dermatologia",
-  "Cardiologia",
+const examTypes = [
+  "Hemograma completo",
+  "Glicemia de jejum",
+  "Colesterol total",
+  "Raio-X de tórax",
+  "Ultrassom abdominal",
 ];
 
 function formatFieldErrors(fieldErrors: unknown): string | null {
@@ -74,7 +74,7 @@ function extractErrorMessage(payload: unknown, status: number): string {
   if (status === 403) return "Acesso não permitido.";
   if (status === 404) return "Não foi possível concluir o agendamento.";
   if (status >= 500) return "Erro interno.";
-  return "Não foi possível agendar a consulta. Tente novamente.";
+  return "Não foi possível agendar o exame. Tente novamente.";
 }
 
 async function readErrorPayload(response: Response): Promise<unknown> {
@@ -88,12 +88,12 @@ async function readErrorPayload(response: Response): Promise<unknown> {
   }
 }
 
-export default function SchedulePage() {
+export default function ScheduleExamPage() {
   const router = useRouter();
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [location, setLocation] = useState(locations[0]);
-  const [specialty, setSpecialty] = useState(specialties[0]);
+  const [examType, setExamType] = useState(examTypes[0]);
   const [notes, setNotes] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
@@ -103,7 +103,7 @@ export default function SchedulePage() {
     event.preventDefault();
     if (loading) return;
 
-    if (!date || !time || !location || !specialty) {
+    if (!date || !time || !location || !examType) {
       setError("Por favor, preencha todos os campos obrigatórios.");
       setSuccessMessage("");
       return;
@@ -130,7 +130,7 @@ export default function SchedulePage() {
           date,
           time,
           location,
-          specialty,
+          specialty: `Exame - ${examType}`,
           notes,
         }),
       });
@@ -152,7 +152,7 @@ export default function SchedulePage() {
       const message =
         typeof data.message === "string" && data.message.trim()
           ? data.message
-          : "Consulta agendada com sucesso! Verifique seus dados no painel.";
+          : "Exame agendado com sucesso! Verifique seus dados no painel.";
 
       setSuccessMessage(message);
       setNotes("");
@@ -164,14 +164,14 @@ export default function SchedulePage() {
   };
 
   return (
-          <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
       <div className="mx-auto w-full max-w-4xl rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-indigo-600">Agendamento de consulta</p>
-            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">Marque sua consulta</h1>
+            <p className="text-sm font-semibold text-indigo-600">Agendamento de exame</p>
+            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">Marque seu exame</h1>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Preencha os dados abaixo para agendar sua consulta em uma UBS.
+              Escolha o tipo de exame e o local de coleta.
             </p>
           </div>
           <button
@@ -186,7 +186,7 @@ export default function SchedulePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             <label className="block">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Data da consulta</span>
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Data do exame</span>
               <input
                 type="date"
                 value={date}
@@ -207,7 +207,7 @@ export default function SchedulePage() {
 
           <div className="grid gap-6 md:grid-cols-2">
             <label className="block">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Unidade básica de saúde</span>
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Local de coleta</span>
               <select
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
@@ -221,13 +221,13 @@ export default function SchedulePage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Especialidade</span>
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Tipo de exame</span>
               <select
-                value={specialty}
-                onChange={(event) => setSpecialty(event.target.value)}
+                value={examType}
+                onChange={(event) => setExamType(event.target.value)}
                 className="mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-indigo-400"
               >
-                {specialties.map((option) => (
+                {examTypes.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
@@ -242,7 +242,7 @@ export default function SchedulePage() {
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               rows={4}
-              placeholder="Descreva sintomas ou outros detalhes importantes"
+              placeholder="Alguma informação relevante para o exame (ex: jejum, medicações em uso)"
               className="mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-indigo-400"
             />
           </label>
@@ -259,7 +259,7 @@ export default function SchedulePage() {
             disabled={loading}
             className="w-full rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? "Agendando..." : "Agendar consulta"}
+            {loading ? "Agendando..." : "Agendar exame"}
           </button>
         </form>
       </div>

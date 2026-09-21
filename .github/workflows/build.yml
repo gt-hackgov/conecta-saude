@@ -17,14 +17,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configurar JDK
-        uses: actions/setup-java@v4
+      - name: Configurar Node
+        uses: actions/setup-node@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
-          cache: 'maven'
-          cache-dependency-path: 'api/pom.xml'
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'app/package-lock.json'
 
-      - name: Build com Maven
-        working-directory: ./api
-        run: mvn -B clean package
+      - name: Instalar dependências
+        working-directory: ./app
+        run: npm ci
+
+      - name: Build
+        working-directory: ./app
+        run: npm run build

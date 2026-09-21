@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { getSession } from "@/lib/authSession";
 
 type Props = {
   open: boolean;
@@ -9,16 +10,16 @@ type Props = {
 };
 
 type Message = {
-  sender: "user" | "assistant";
+  role: "user" | "bot";
   text: string;
 };
 
-export function ChatModal({ open, onClose, userName }: Props) {
-  const modalRef = useRef<HTMLDivElement | null>(null);
+export function ChatModal({ open, onClose }: Props) {
   const [messages, setMessages] = useState<Message[]>([
-    { sender: "assistant", text: "Olá! Como posso ajudar você hoje?" },
+    { role: "bot", text: "Olá! Como posso ajudar?" },
   ]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -35,95 +36,101 @@ export function ChatModal({ open, onClose, userName }: Props) {
 
   if (!open) return null;
 
-  const handleSend = () => {
+  async function sendMessage() {
     if (!input.trim()) return;
-    const userMessage: Message = { sender: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
+
+    const userMsg: Message = { role: "user", text: input };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    // Simulate response
-    setTimeout(() => {
-      let response: Message = {
-        sender: "assistant",
-        text: "Obrigado pela mensagem! Em breve teremos mais funcionalidades.",
-      };
-      if (input.toLowerCase().includes("como combater o mosquito da dengue")) {
-        response = {
-          sender: "assistant",
-          text: "Medidas de Combate ao Mosquito:\n- Elimine água parada: Vasos de plantas, garrafas, pneus e recipientes plásticos devem ser limpos ou vedados.\n- Limpeza de calhas e lajes: Evite acúmulo de folhas e sujeira que represam água.\n- Caixas-d'água e tonéis: Mantenha vedados hermeticamente.\n- Piscinas: Mantenha tratadas com cloro.\n- Lixo: Feche sacos de lixo corretamente e descarte pneus em locais adequados.",
-        };
+    setLoading(true);
+
+    try {
+      const session = getSession();
+      if (!session?.token) {
+        throw new Error("Faça login para usar o chatbot.");
       }
-      setMessages((prev) => [...prev, response]);
-    }, 1000);
-  };
+
+      const response = await fetch("/api/chatbot/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.token}`,
+        },
+        body: JSON.stringify({ message: userMsg.text }),
+      });
+      const data = (await response.json()) as { answer?: string; message?: string };
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Sessão expirada ou inválida. Faça login novamente.");
+        }
+        throw new Error(data.message ?? "Não foi possível enviar a mensagem.");
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: data.answer ?? "Não foi possível obter uma resposta." },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: error instanceof Error ? error.message : "Erro ao conectar com o servidor.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <div className="fixed bottom-20 right-6 z-50">
+    <div className="fixed bottom-24 right-6 z-50">
       <div
-        ref={modalRef}
-        className="w-96 h-[28rem] rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900 flex flex-col"
+        className="flex h-96 w-80 flex-col rounded-lg border bg-white shadow-lg dark:bg-zinc-900"
         role="dialog"
         aria-modal="true"
       >
-        <header className="flex items-start justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-              ChatBot - Conecta Saúde
-            </h2>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Converse com nosso assistente virtual e tire suas dúvidas sobre sua saúde, prevenções, preparos de exames etc.
-            </p>
-          </div>
+        <header className="flex items-center justify-between border-b p-3">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            ChatBot - Conecta Saúde
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            className="rounded-full p-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
             aria-label="Fechar modal"
           >
             ✕
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto space-y-4 mt-4">
-          {messages.map((msg, idx) => (
+        <div className="flex-1 space-y-2 overflow-y-auto p-3">
+          {messages.map((message, index) => (
             <div
-              key={idx}
-              className={`flex flex-col gap-2 ${
-                msg.sender === "user" ? "items-end" : "items-start"
+              key={index}
+              className={`max-w-[80%] rounded-lg p-2 text-sm whitespace-pre-wrap ${
+                message.role === "user"
+                  ? "ml-auto bg-blue-500 text-white"
+                  : "bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-100"
               }`}
             >
-              {msg.sender === "assistant" ? (
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Assistente:
-                </span>
-              ) : (
-                <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                  {userName}:
-                </span>
-              )}
-              <div
-                className={`rounded-lg p-3 text-sm whitespace-pre-wrap ${
-                  msg.sender === "user"
-                    ? "bg-indigo-100 text-indigo-900 self-end ml-auto max-w-xs"
-                    : "bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100"
-                }`}
-              >
-                {msg.text}
-              </div>
+              {message.text}
             </div>
           ))}
+          {loading && <div className="text-sm text-gray-400">Digitando...</div>}
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="flex border-t p-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-indigo-400"
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            className="flex-1 rounded border px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             placeholder="Digite sua mensagem..."
           />
           <button
-            onClick={handleSend}
-            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            onClick={sendMessage}
+            className="ml-2 rounded bg-blue-600 px-3 py-1 text-sm text-white transition hover:bg-blue-700"
           >
             Enviar
           </button>

@@ -1,0 +1,316 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getSession } from "@/lib/authSession";
+import { registrarAuditoria } from "@/lib/auditLog";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { BottomNav } from "@/components/BottomNav";
+
+type Paciente = {
+  cpf: string;
+  dataNascimento: string;
+  telefone: string;
+  endereco: string;
+  historico: { data: string; especialidade: string; status: "Compareceu" | "Faltou" }[];
+  tipoSanguineo: string;
+  doadorSangue: boolean;
+  doadorOrgaos: boolean;
+  religiao: string;
+  alergias: string[];
+  atividadeFisica: string;
+  condicaoCardiovascular: string;
+  statusSorologico: string;
+  contatoEmergencia: { nome: string; parentesco: string; telefone: string };
+};
+
+const pacientes: Record<string, Paciente> = {
+  "Maria Silva": {
+    cpf: "12925945007",
+    dataNascimento: "14/03/1988",
+    telefone: "(11) 98888-1234",
+    endereco: "Rua das Acácias, 245 — Jardim Esperança, São Paulo/SP",
+    historico: [
+      { data: "10/08/2026", especialidade: "Clínica Geral", status: "Compareceu" },
+      { data: "22/05/2026", especialidade: "Cardiologia", status: "Compareceu" },
+    ],
+    tipoSanguineo: "O+",
+    doadorSangue: true,
+    doadorOrgaos: true,
+    religiao: "Não informado",
+    alergias: ["Dipirona"],
+    atividadeFisica: "Moderadamente ativa",
+    condicaoCardiovascular: "Nenhuma relatada",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "João Silva", parentesco: "Cônjuge", telefone: "(11) 97777-2222" },
+  },
+  "João Souza": {
+    cpf: "98765432100",
+    dataNascimento: "02/11/1975",
+    telefone: "(11) 97777-5678",
+    endereco: "Av. Vila Nova, 980 — Vila Nova, São Paulo/SP",
+    historico: [
+      { data: "30/07/2026", especialidade: "Clínica Geral", status: "Faltou" },
+      { data: "18/04/2026", especialidade: "Ortopedia", status: "Compareceu" },
+    ],
+    tipoSanguineo: "A-",
+    doadorSangue: false,
+    doadorOrgaos: false,
+    religiao: "Testemunha de Jeová",
+    alergias: [],
+    atividadeFisica: "Sedentário",
+    condicaoCardiovascular: "Hipertensão controlada",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "Rita Souza", parentesco: "Cônjuge", telefone: "(11) 97777-9999" },
+  },
+  "Ana Costa": {
+    cpf: "45678912300",
+    dataNascimento: "27/06/1992",
+    telefone: "(11) 96666-4321",
+    endereco: "Rua das Orquídeas, 112 — Parque das Flores, São Paulo/SP",
+    historico: [{ data: "05/06/2026", especialidade: "Dermatologia", status: "Compareceu" }],
+    tipoSanguineo: "B+",
+    doadorSangue: true,
+    doadorOrgaos: false,
+    religiao: "Católica",
+    alergias: ["Amoxicilina", "Poeira"],
+    atividadeFisica: "Ativa",
+    condicaoCardiovascular: "Nenhuma relatada",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "Carlos Costa", parentesco: "Pai", telefone: "(11) 96666-8888" },
+  },
+  "Pedro Lima": {
+    cpf: "32165498700",
+    dataNascimento: "19/09/1965",
+    telefone: "(11) 95555-8765",
+    endereco: "Av. Águia de Haia, 3300 — Cidade Líder, São Paulo/SP",
+    historico: [
+      { data: "12/07/2026", especialidade: "Cardiologia", status: "Faltou" },
+      { data: "01/03/2026", especialidade: "Cardiologia", status: "Faltou" },
+    ],
+    tipoSanguineo: "AB+",
+    doadorSangue: false,
+    doadorOrgaos: true,
+    religiao: "Não informado",
+    alergias: ["Penicilina"],
+    atividadeFisica: "Sedentário",
+    condicaoCardiovascular: "Arritmia leve",
+    statusSorologico: "Não reagente",
+    contatoEmergencia: { nome: "Ana Lima", parentesco: "Filha", telefone: "(11) 95555-3333" },
+  },
+};
+
+function maskCpf(cpf: string) {
+  const d = cpf.replace(/\D/g, "").padStart(11, "0");
+  const masked = "*******" + d.slice(7);
+  return `${masked.slice(0, 3)}.${masked.slice(3, 6)}.${masked.slice(6, 9)}-${masked.slice(9, 11)}`;
+}
+
+const statusStyles: Record<string, string> = {
+  Compareceu: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  Faltou: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+};
+
+function FichaPacienteContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const nome = searchParams.get("nome") ?? "";
+  const paciente = pacientes[nome];
+
+  const [checkedAuth, setCheckedAuth] = useState(false);
+  const [isMedico, setIsMedico] = useState(false);
+
+  useEffect(() => {
+    const session = getSession();
+    setIsMedico(Boolean(session?.token && session.role === "MEDICO"));
+    setCheckedAuth(true);
+
+    if (session?.token && session.role === "MEDICO" && nome) {
+      registrarAuditoria({
+        ator: session.nome,
+        perfil: session.role,
+        acao: "CONSULTA_DADO_SENSIVEL",
+        alvo: `Ficha do paciente: ${nome}`,
+      });
+    }
+  }, [nome]);
+
+  useEffect(() => {
+    if (checkedAuth && !isMedico) {
+      router.replace("/");
+    }
+  }, [checkedAuth, isMedico, router]);
+
+  if (!checkedAuth || !isMedico) {
+    return null;
+  }
+
+  if (!paciente) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-900">
+        <div className="text-center">
+          <p className="text-zinc-600 dark:text-zinc-400">Paciente não encontrado.</p>
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard-medico")}
+            className="mt-4 text-sm font-semibold text-indigo-600 hover:underline"
+          >
+            ← Voltar ao painel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const totalConsultas = paciente.historico.length;
+  const totalFaltas = paciente.historico.filter((h) => h.status === "Faltou").length;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
+      <div className="mx-auto w-full max-w-4xl">
+        <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-indigo-600">Ficha do paciente</p>
+            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">{nome}</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard-medico")}
+              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+            >
+              Voltar ao painel
+            </button>
+            <ThemeToggle />
+          </div>
+        </header>
+
+        <section className="mt-6 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
+          <div className="flex-1 px-6 py-4 sm:min-w-[160px]">
+            <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">CPF</p>
+            <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              {maskCpf(paciente.cpf)}
+            </p>
+          </div>
+          <div className="flex-1 px-6 py-4 sm:min-w-[160px]">
+            <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              Data de nascimento
+            </p>
+            <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              {paciente.dataNascimento}
+            </p>
+          </div>
+          <div className="flex-1 px-6 py-4 sm:min-w-[160px]">
+            <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              Consultas / faltas
+            </p>
+            <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              {totalConsultas} / {totalFaltas}
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Contato
+          </h2>
+          <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{paciente.telefone}</p>
+          <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">{paciente.endereco}</p>
+          <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Contato de emergência</p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              {paciente.contatoEmergencia.nome} ({paciente.contatoEmergencia.parentesco}) — {paciente.contatoEmergencia.telefone}
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Histórico de consultas
+          </h2>
+          <table className="mt-4 w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+                <th className="py-2 pr-4">Data</th>
+                <th className="py-2 pr-4">Especialidade</th>
+                <th className="py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {paciente.historico.map((h) => (
+                <tr key={`${h.data}-${h.especialidade}`}>
+                  <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">{h.data}</td>
+                  <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">{h.especialidade}</td>
+                  <td className="py-3">
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[h.status]}`}>
+                      {h.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Ficha de saúde
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Tipo sanguíneo</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.tipoSanguineo}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Doador de sangue / órgãos</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                {paciente.doadorSangue ? "Sangue" : "—"}{paciente.doadorSangue && paciente.doadorOrgaos ? " · " : ""}{paciente.doadorOrgaos ? "Órgãos" : paciente.doadorSangue ? "" : "Não é doador"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Religião (relevante p/ transfusão)</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.religiao}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Atividade física</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.atividadeFisica}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Alergias</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                {paciente.alergias.length > 0 ? paciente.alergias.join(", ") : "Nenhuma relatada"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Condição cardiovascular</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{paciente.condicaoCardiovascular}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+              Dado confidencial — acesso restrito ao profissional de saúde
+            </p>
+            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-200">
+              Status sorológico: {paciente.statusSorologico}
+            </p>
+          </div>
+        </section>
+
+        <p className="mt-4 text-xs text-zinc-400">
+          CPF exibido de forma mascarada, seguindo boa prática de proteção de dados sensíveis.
+        </p>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}
+
+export default function FichaPacientePage() {
+  return (
+    <Suspense fallback={null}>
+      <FichaPacienteContent />
+    </Suspense>
+  );
+}

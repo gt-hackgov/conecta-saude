@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getSession, removeSession } from "@/lib/authSession";
+import { registrarAuditoria } from "@/lib/auditLog";
+import { BottomNav } from "@/components/BottomNav";
 
 const especialidades = [
   { nome: "Clínica Geral", quantidade: 42 },
@@ -58,6 +60,16 @@ export default function DashboardMedicoPage() {
 
   const maxQuantidade = Math.max(...especialidades.map((e) => e.quantidade));
   const handleExportarTriagem = () => {
+    const session = getSession();
+    if (session?.token) {
+      registrarAuditoria({
+        ator: session.nome,
+        perfil: session.role,
+        acao: "EXPORTACAO_DADOS",
+        alvo: "Lista de triagem (CSV) - pacientes de risco alto",
+      });
+    }
+
     const pacientesAltoRisco = consultasHoje.filter((c) => c.risco === "Alto");
 
     const cabecalho = "Paciente;Horario;Risco";
@@ -80,7 +92,7 @@ export default function DashboardMedicoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 dark:bg-none dark:bg-zinc-900">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
       <div className="mx-auto w-full max-w-6xl">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -224,6 +236,8 @@ export default function DashboardMedicoPage() {
           </div>
         </section>
       </div>
+
+      <BottomNav />
     </div>
   );
 }

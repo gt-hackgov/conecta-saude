@@ -28,3 +28,15 @@ export function removeSession() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(STORAGE_KEY);
 }
+
+const roleHomeHref: Record<string, string> = {
+  PACIENTE: "/dashboard",
+  MEDICO: "/dashboard-medico",
+  ADMIN: "/dashboard-administrador",
+};
+
+export function getHomeHref(): string {
+  const session = getSession();
+  if (!session?.role) return "/";
+  return roleHomeHref[session.role] ?? "/";
+}

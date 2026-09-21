@@ -84,7 +84,7 @@ export function ChatModal({ open, onClose }: Props) {
   }
 
   return (
-    <div className="fixed bottom-20 right-6 z-50">
+    <div className="fixed bottom-24 right-6 z-50">
       <div
         className="flex h-96 w-80 flex-col rounded-lg border bg-white shadow-lg dark:bg-zinc-900"
         role="dialog"

@@ -110,6 +110,7 @@ export function LoginForm({ role, successMessage, onClearSuccessMessage }: Props
         nome: String(data.nome),
         role: apiRole,
         token: String(data.token),
+        cpf: normalizedCpf,
       });
 
       registrarAuditoria({

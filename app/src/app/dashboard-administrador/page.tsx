@@ -48,17 +48,6 @@ export default function DashboardAdministradorPage() {
     return null;
   }
 
-    const gradientePizza = (() => {
-    let acumulado = 0;
-    const partes: string[] = [];
-    especialidades.forEach((e) => {
-      partes.push(`${e.cor} ${acumulado}%`);
-      acumulado += e.relativa;
-      partes.push(`${e.cor} ${acumulado}%`);
-    });
-    return `conic-gradient(${partes.join(", ")})`;
-  })();
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
       <div className="mx-auto w-full max-w-6xl">
@@ -141,33 +130,6 @@ export default function DashboardAdministradorPage() {
             </div>
           </div>
 
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Demanda por especialidade — pizza
-            </h2>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Participação percentual de cada especialidade
-            </p>
-            <div className="mt-6 flex flex-col items-center justify-center gap-10 sm:flex-row">
-              <div
-                className="h-64 w-64 shrink-0 rounded-full"
-                style={{ backgroundImage: gradientePizza }}
-              />
-              <ul className="space-y-2">
-                {especialidades.map((item) => (
-                  <li key={item.nome} className="flex items-center gap-2 text-xs">
-                    <span
-                      className="h-3 w-3 rounded-sm"
-                      style={{ backgroundColor: item.cor }}
-                    />
-                    <span className="text-zinc-700 dark:text-zinc-300">
-                      {item.nome} — {item.relativa}%
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
         </section>
 
         <section className="mt-16 overflow-x-auto rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">

@@ -5,22 +5,41 @@ import { useRouter } from "next/navigation";
 import { getHomeHref, getSession, type AuthSession } from "@/lib/authSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BottomNav } from "@/components/BottomNav";
+import { listarAuditoria, type RegistroAuditoria } from "@/lib/auditLog";
+
+const acaoLabel: Record<string, string> = {
+  LOGIN: "Entrada no sistema",
+  CONSULTA_DADO_SENSIVEL: "Consulta à sua ficha",
+  EXPORTACAO_DADOS: "Download / exportação de dados",
+  CANCELAMENTO_AGENDAMENTO: "Cancelamento de agendamento",
+};
 
 const roleLabel: Record<string, string> = {
   PACIENTE: "Paciente",
   MEDICO: "Profissional de saúde",
   ADMIN: "Administrador da UBS",
+  AUDITOR: "Auditor",
 };
 
 export default function MeuPerfilPage() {
   const router = useRouter();
   const [session, setSession] = useState<AuthSession | null>(null);
   const [checked, setChecked] = useState(false);
+  const [historico, setHistorico] = useState<RegistroAuditoria[]>([]);
 
   useEffect(() => {
     const current = getSession();
     setSession(current?.token ? current : null);
     setChecked(true);
+    if (current?.nome) {
+      // Transparência (LGPD, art. 9º e 18): o titular vê as ações feitas na conta dele
+      // e os acessos de profissionais aos dados dele.
+      setHistorico(
+        listarAuditoria()
+          .filter((r) => r.ator === current.nome || r.alvo.includes(current.nome))
+          .slice(0, 20)
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -79,6 +98,29 @@ export default function MeuPerfilPage() {
             <span className="text-indigo-600 dark:text-indigo-400">→</span>
           </button>
         ) : null}
+
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
+          <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Histórico de acessos</h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Por transparência (LGPD), você pode ver quem acessou ou baixou seus dados e quando.
+          </p>
+          <ul className="mt-4 divide-y divide-zinc-100 dark:divide-zinc-800">
+            {historico.map((r, i) => (
+              <li key={`${r.timestamp}-${i}`} className="flex flex-col gap-0.5 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-zinc-900 dark:text-zinc-100">{acaoLabel[r.acao] ?? r.acao}</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {r.ator === session.nome ? "Você" : `${r.ator} (${roleLabel[r.perfil] ?? r.perfil})`} · {r.alvo}
+                  </p>
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{new Date(r.timestamp).toLocaleString("pt-BR")}</p>
+              </li>
+            ))}
+            {historico.length === 0 ? (
+              <li className="py-4 text-sm text-zinc-500 dark:text-zinc-400">Nenhum acesso registrado ainda.</li>
+            ) : null}
+          </ul>
+        </section>
       </div>
 
       <BottomNav />

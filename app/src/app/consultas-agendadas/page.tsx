@@ -389,16 +389,28 @@ export default function ScheduledAppointmentsPage() {
             <p className="text-sm font-semibold text-indigo-600">Consultas agendadas</p>
             <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">Histórico de agendamentos</h1>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Veja as consultas que você já agendou e volte ao painel para novos agendamentos.
+              Veja suas consultas marcadas, cancele ou desfaça alterações de forma simples.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard")}
-            className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Voltar ao painel
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            {undoCount > 0 && (
+              <button
+                type="button"
+                onClick={handleUndo}
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600"
+              >
+                <span>↩ Desfazer cancelamento</span>
+                <span className="rounded-full bg-amber-700/40 px-2 py-0.5 text-xs">{undoCount}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard")}
+              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+            >
+              Voltar ao painel
+            </button>
+          </div>
         </header>
 
         {successMessage ? (
@@ -417,8 +429,8 @@ export default function ScheduledAppointmentsPage() {
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Carregando consultas...</p>
         ) : appointments.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-10 text-center text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-            <p className="text-lg font-semibold">Nenhuma consulta agendada ainda.</p>
-            <p className="mt-2 text-sm">Use a página de agendamento para marcar sua primeira consulta.</p>
+            <p className="text-lg font-semibold">Nenhuma consulta agendada no momento.</p>
+            <p className="mt-2 text-sm">Use o painel para agendar uma nova consulta médica.</p>
           </div>
         ) : (
           <div className="space-y-6">

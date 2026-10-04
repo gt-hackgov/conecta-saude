@@ -151,6 +151,25 @@ export default function DashboardPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
 
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const res = await fetch("/api/notifications", {
+          headers: { Authorization: "Bearer mock-token-123" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          while (!notificationQueue.isEmpty()) notificationQueue.dequeue();
+          data.notifications.forEach((n: NotificationItem) => notificationQueue.enqueue(n));
+          setNotificationsArray(notificationQueue.toArray());
+        }
+      } catch (error) {
+        console.error("Erro ao buscar notificações:", error);
+      }
+    }
+    fetchNotifications();
+  }, [notificationQueue]);
+
   const welcomeMessage = useMemo(() => {
     if (!userName) return "Olá";
     return `Olá, ${userName}!`;

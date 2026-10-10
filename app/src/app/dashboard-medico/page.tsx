@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { getSession, removeSession } from "@/lib/authSession";
 import { registrarAuditoria } from "@/lib/auditLog";
 import { BottomNav } from "@/components/BottomNav";
+import { SenhaModal } from "@/components/SenhaModal";
 
 const especialidades = [
   { nome: "Clínica Geral", quantidade: 42 },
@@ -34,6 +35,7 @@ export default function DashboardMedicoPage() {
   const [userName, setUserName] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [filtroRisco, setFiltroRisco] = useState<"Todos" | "Baixo" | "Médio" | "Alto">("Todos");
+  const [senhaExportAberta, setSenhaExportAberta] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -128,7 +130,7 @@ export default function DashboardMedicoPage() {
             </div>
             <button
               type="button"
-              onClick={handleExportarTriagem}
+              onClick={() => setSenhaExportAberta(true)}
               className="whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
             >
               Exportar lista de triagem (CSV)
@@ -236,6 +238,15 @@ export default function DashboardMedicoPage() {
           </div>
         </section>
       </div>
+
+      <SenhaModal
+        open={senhaExportAberta}
+        titulo="Exportar lista de triagem"
+        descricao="A lista contém dados sensíveis de pacientes. Confirme sua senha de acesso para exportar — a exportação fica registrada na trilha de auditoria."
+        textoBotao="Confirmar e exportar"
+        onClose={() => setSenhaExportAberta(false)}
+        onConfirmado={() => handleExportarTriagem()}
+      />
 
       <BottomNav />
     </div>

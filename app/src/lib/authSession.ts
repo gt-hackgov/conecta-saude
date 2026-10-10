@@ -3,6 +3,8 @@ export type AuthSession = {
   nome: string;
   role: string;
   token: string;
+  /** CPF (somente dígitos) — usado para reconfirmar a senha antes de downloads sensíveis. */
+  cpf?: string;
 };
 
 const STORAGE_KEY = "conectaSaudeSession";

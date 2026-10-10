@@ -58,7 +58,7 @@ export function ChatModal({ open, onClose }: Props) {
         },
         body: JSON.stringify({ message: userMsg.text }),
       });
-      const data = (await response.json()) as { answer?: string; message?: string };
+      const data = (await response.json()) as { answer?: string; message?: string; source?: string };
       if (!response.ok) {
         if (response.status === 401) {
           throw new Error("Sessão expirada ou inválida. Faça login novamente.");
@@ -68,7 +68,12 @@ export function ChatModal({ open, onClose }: Props) {
 
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: data.answer ?? "Não foi possível obter uma resposta." },
+        {
+          role: "bot",
+          text:
+            (data.answer ?? "Não foi possível obter uma resposta.") +
+            (data.source === "gemini" ? "\n\n— Resposta gerada por IA (Gemini). Não substitui avaliação profissional." : ""),
+        },
       ]);
     } catch (error) {
       setMessages((prev) => [

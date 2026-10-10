@@ -4,6 +4,10 @@ import { Fragment, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BottomNav } from "@/components/BottomNav";
+import { SenhaModal } from "@/components/SenhaModal";
+import { baixarPdfProtegido } from "@/lib/securePdf";
+import { getSession } from "@/lib/authSession";
+import { registrarAuditoria } from "@/lib/auditLog";
 
 type StatusExame = "Disponível" | "Aguardando";
 
@@ -54,14 +58,41 @@ export default function ResultadoExamesPage() {
   const [baixando, setBaixando] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
 
+  const [pendente, setPendente] = useState<string | null>(null);
+
   const handleBaixar = (opcao: string) => {
     setMenuAberto(false);
+    setPendente(opcao);
+  };
+
+  const gerarPdf = async (senha: string) => {
+    if (!pendente) return;
+    const opcao = pendente;
     setBaixando(opcao);
-    setTimeout(() => {
-      setBaixando(null);
-      setMensagem(`${opcao} — download concluído (demo)`);
-      setTimeout(() => setMensagem(null), 3000);
-    }, 1200);
+    const selecionados = opcao === "Todos os exames" ? exames : exames.filter((e) => e.nome === opcao);
+    await baixarPdfProtegido(
+      {
+        titulo: opcao === "Todos os exames" ? "Resultado de exames" : `Resultado — ${opcao}`,
+        secoes: selecionados.map((e) => ({
+          titulo: e.nome,
+          linhas: [
+            `Tipo: ${e.tipo}`,
+            `Data da coleta: ${e.dataColeta}`,
+            `Status: ${e.status}`,
+            ...(e.resultado ?? ["Resultado ainda não liberado pelo laboratório."]),
+          ],
+        })),
+      },
+      senha,
+      `exames-${opcao === "Todos os exames" ? "todos" : opcao.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-")}.pdf`
+    );
+    const session = getSession();
+    if (session) {
+      registrarAuditoria({ ator: session.nome, perfil: session.role, acao: "EXPORTACAO_DADOS", alvo: `Resultado de exames (PDF) — ${opcao}` });
+    }
+    setBaixando(null);
+    setMensagem(`${opcao} — PDF baixado. Para abrir, use sua senha de login.`);
+    setTimeout(() => setMensagem(null), 5000);
   };
 
   const examesFiltrados = useMemo(
@@ -227,6 +258,13 @@ export default function ResultadoExamesPage() {
         </section>
 
       </div>
+
+      <SenhaModal
+        open={pendente !== null}
+        titulo="Baixar resultado em PDF"
+        onClose={() => setPendente(null)}
+        onConfirmado={gerarPdf}
+      />
 
       <BottomNav />
     </div>

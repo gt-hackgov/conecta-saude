@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { perguntarGroq } from "@/lib/groq";
 
 /**
  * Chatbot híbrido (sem custo):
@@ -22,7 +23,8 @@ type BackendChat = { answer?: string; matched?: boolean };
 
 async function perguntarGemini(pergunta: string): Promise<string | null> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  // Sem chave do Gemini -> tenta o Groq (alternativa gratuita); sem nenhuma chave, retorna null (só FAQ)
+  if (!apiKey) return perguntarGroq({ system: SYSTEM_PROMPT, user: pergunta.slice(0, 1000), temperature: 0.4 });
 
   const modelos = [process.env.GEMINI_MODEL ?? "gemini-3.5-flash", "gemini-2.5-flash"];
 
@@ -118,7 +120,8 @@ export async function POST(request: NextRequest) {
   if (pergunta.trim()) {
     const respostaIa = await perguntarGemini(pergunta);
     if (respostaIa) {
-      return NextResponse.json({ answer: respostaIa, matched: true, category: "IA", source: "gemini" });
+      const provedor = process.env.GEMINI_API_KEY ? "Gemini" : "Llama via Groq";
+      return NextResponse.json({ answer: respostaIa, matched: true, category: "IA", source: "gemini", provedor });
     }
   }
 

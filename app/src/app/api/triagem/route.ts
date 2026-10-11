@@ -7,6 +7,7 @@ import {
   type Nivel,
   type ResultadoTriagem,
 } from "@/lib/triagem";
+import { perguntarGroq } from "@/lib/groq";
 
 /**
  * Triagem orientativa assistida por IA: "Para onde eu vou? UBS, UPA ou SAMU".
@@ -18,7 +19,8 @@ import {
  *  3. TRAVA DE SEGURANÇA: o resultado final é o MAIS GRAVE entre regras e IA.
  *     A IA pode aumentar a gravidade, mas nunca diminuir.
  *
- * Sem GEMINI_API_KEY, ou se a IA falhar, a triagem continua funcionando só com as regras.
+ * Provedor de IA: Gemini (GEMINI_API_KEY) ou, como alternativa gratuita, Groq (GROQ_API_KEY).
+ * Sem nenhuma chave, ou se a IA falhar, a triagem continua funcionando só com as regras.
  * Privacidade: o relato NÃO é gravado em lugar nenhum e não é enviado para o log.
  */
 
@@ -71,13 +73,28 @@ function excedeuLimite(ip: string): boolean {
 }
 
 /* ---------- Chamada à IA ---------- */
+/** Instrução extra para modelos sem "responseSchema" (Groq): descreve o JSON esperado. */
+const FORMATO_JSON = `
+Responda SOMENTE com um objeto JSON válido, sem texto fora dele, neste formato:
+{"nivel": "EMERGENCIA" | "UPA" | "UBS", "justificativa": "texto", "sinais": ["texto"], "especialidadeSugerida": "texto" ou null}`;
+
 async function perguntarIa(relato: string, sintomas: string[]): Promise<RespostaIa | null> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
 
   const entrada =
     `Sintomas marcados: ${sintomas.length ? sintomas.join("; ") : "nenhum"}.\n` +
     `Relato do cidadão: """${relato || "(sem relato)"}"""`;
+
+  // Sem chave do Gemini -> tenta o Groq (alternativa gratuita)
+  if (!apiKey) {
+    const texto = await perguntarGroq({ system: SYSTEM_PROMPT + FORMATO_JSON, user: entrada, json: true, temperature: 0.1 });
+    if (!texto) return null;
+    try {
+      return validarRespostaIa(JSON.parse(texto));
+    } catch {
+      return null;
+    }
+  }
 
   const modelos = [process.env.GEMINI_MODEL ?? "gemini-3.5-flash", "gemini-2.5-flash"];
 

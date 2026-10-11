@@ -5,61 +5,15 @@ import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BottomNav } from "@/components/BottomNav";
 import { getHomeHref } from "@/lib/authSession";
+import { GRUPOS_SINTOMAS as grupos, type Nivel, type ResultadoTriagem } from "@/lib/triagem";
 
 /**
- * Triagem orientativa "O que você tem?"
+ * Triagem orientativa "O que você tem?" — assistida por IA.
  *
- * Regras simples e transparentes (sem IA e sem custo) baseadas nas orientações
- * gerais do SUS sobre a diferença entre UBS, UPA e SAMU 192:
- *  - Sinais de risco de vida  -> ligar 192 (SAMU) / pronto-socorro
- *  - Urgência (precisa hoje)  -> UPA 24h
- *  - Rotina / sintomas leves   -> UBS
- * A regra considera sempre o sintoma MAIS GRAVE marcado.
+ * O cidadão descreve com as próprias palavras e/ou marca sintomas.
+ * A rota /api/triagem combina REGRAS de segurança (sempre) com a IA Gemini (quando configurada).
+ * A IA só pode aumentar a gravidade, nunca diminuir. Detalhes em src/app/api/triagem/route.ts.
  */
-
-type Nivel = "EMERGENCIA" | "UPA" | "UBS";
-
-type Sintoma = { id: string; texto: string; nivel: Nivel };
-
-const grupos: { titulo: string; sintomas: Sintoma[] }[] = [
-  {
-    titulo: "Sinais de alerta",
-    sintomas: [
-      { id: "peito", texto: "Dor forte ou aperto no peito", nivel: "EMERGENCIA" },
-      { id: "ar", texto: "Falta de ar intensa, lábios roxos", nivel: "EMERGENCIA" },
-      { id: "avc", texto: "Boca torta, fraqueza de um lado do corpo ou fala enrolada", nivel: "EMERGENCIA" },
-      { id: "desmaio", texto: "Desmaio, convulsão ou confusão mental", nivel: "EMERGENCIA" },
-      { id: "sangue", texto: "Sangramento intenso que não para", nivel: "EMERGENCIA" },
-      { id: "acidente", texto: "Acidente grave, queimadura extensa ou trauma na cabeça", nivel: "EMERGENCIA" },
-    ],
-  },
-  {
-    titulo: "Precisa de atendimento hoje",
-    sintomas: [
-      { id: "febre", texto: "Febre alta (39 °C ou mais) que não baixa com remédio", nivel: "UPA" },
-      { id: "vomito", texto: "Vômito ou diarreia muito forte, sinais de desidratação", nivel: "UPA" },
-      { id: "corte", texto: "Corte que pode precisar de pontos", nivel: "UPA" },
-      { id: "fratura", texto: "Suspeita de fratura, torção forte ou inchaço após queda", nivel: "UPA" },
-      { id: "dor", texto: "Dor forte e repentina (barriga, cabeça, costas)", nivel: "UPA" },
-      { id: "asma", texto: "Crise de asma ou chiado no peito", nivel: "UPA" },
-      { id: "alergia", texto: "Alergia com inchaço ou manchas pelo corpo", nivel: "UPA" },
-    ],
-  },
-  {
-    titulo: "Pode ser resolvido na UBS",
-    sintomas: [
-      { id: "resfriado", texto: "Resfriado, tosse leve, dor de garganta", nivel: "UBS" },
-      { id: "leve", texto: "Dor leve ou mal-estar há alguns dias", nivel: "UBS" },
-      { id: "receita", texto: "Renovar receita ou acompanhar doença crônica (pressão, diabetes)", nivel: "UBS" },
-      { id: "vacina", texto: "Vacinação", nivel: "UBS" },
-      { id: "exame", texto: "Pedir ou mostrar exames de rotina", nivel: "UBS" },
-      { id: "prenatal", texto: "Pré-natal, saúde da mulher ou da criança", nivel: "UBS" },
-      { id: "mental", texto: "Ansiedade, tristeza, dificuldade para dormir", nivel: "UBS" },
-    ],
-  },
-];
-
-const prioridade: Record<Nivel, number> = { EMERGENCIA: 3, UPA: 2, UBS: 1 };
 
 const resultado: Record<Nivel, { titulo: string; texto: string; cor: string }> = {
   EMERGENCIA: {
@@ -85,19 +39,45 @@ const resultado: Record<Nivel, { titulo: string; texto: string; cor: string }> =
 export default function OQueVoceTemPage() {
   const router = useRouter();
   const [marcados, setMarcados] = useState<string[]>([]);
-  const [nivel, setNivel] = useState<Nivel | null>(null);
+  const [relato, setRelato] = useState("");
+  const [resultadoIa, setResultadoIa] = useState<ResultadoTriagem | null>(null);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const nivel: Nivel | null = resultadoIa?.nivel ?? null;
+  const podeAvaliar = (marcados.length > 0 || relato.trim().length >= 3) && !carregando;
+
+  const limparResultado = () => {
+    setResultadoIa(null);
+    setErro(null);
+  };
 
   const alternar = (id: string) => {
-    setNivel(null);
+    limparResultado();
     setMarcados((atual) => (atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id]));
   };
 
-  const avaliar = () => {
-    const todos = grupos.flatMap((g) => g.sintomas).filter((s) => marcados.includes(s.id));
-    if (todos.length === 0) return;
-    const maisGrave = todos.reduce((a, b) => (prioridade[b.nivel] > prioridade[a.nivel] ? b : a));
-    setNivel(maisGrave.nivel);
-    setTimeout(() => document.getElementById("resultado-triagem")?.scrollIntoView({ behavior: "smooth" }), 50);
+  const avaliar = async () => {
+    if (!podeAvaliar) return;
+    setCarregando(true);
+    limparResultado();
+    try {
+      const resposta = await fetch("/api/triagem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ relato, sintomas: marcados }),
+      });
+      const dados = await resposta.json();
+      if (!resposta.ok) {
+        setErro(dados?.message ?? "Não foi possível avaliar agora. Tente novamente.");
+        return;
+      }
+      setResultadoIa(dados as ResultadoTriagem);
+      setTimeout(() => document.getElementById("resultado-triagem")?.scrollIntoView({ behavior: "smooth" }), 50);
+    } catch {
+      setErro("Sem conexão com o servidor. Em caso de dúvida sobre gravidade, procure a UPA ou ligue 192.");
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
@@ -138,6 +118,30 @@ export default function OQueVoceTemPage() {
           </div>
         </section>
 
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
+          <label htmlFor="relato" className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            Conte com suas palavras o que está sentindo
+          </label>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Ex.: &quot;Meu filho de 3 anos está com febre de 39,5 desde ontem e não quer comer&quot;. Não escreva nome, CPF ou endereço.
+          </p>
+          <textarea
+            id="relato"
+            value={relato}
+            maxLength={600}
+            rows={3}
+            onChange={(e) => {
+              setRelato(e.target.value);
+              limparResultado();
+            }}
+            className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
+            placeholder="Descreva os sintomas, há quanto tempo, idade e se tem alguma doença…"
+          />
+          <p className="mt-1 text-right text-xs text-zinc-400">{relato.length}/600</p>
+        </section>
+
+        <p className="mt-6 text-sm font-semibold text-zinc-700 dark:text-zinc-300">E/ou marque os sintomas:</p>
+
         {grupos.map((g) => (
           <section key={g.titulo} className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
             <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{g.titulo}</h2>
@@ -166,17 +170,19 @@ export default function OQueVoceTemPage() {
           <button
             type="button"
             onClick={avaliar}
-            disabled={marcados.length === 0}
+            disabled={!podeAvaliar}
+            aria-busy={carregando}
             className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Ver para onde ir
+            {carregando ? "Analisando…" : "Ver para onde ir"}
           </button>
-          {marcados.length > 0 ? (
+          {marcados.length > 0 || relato ? (
             <button
               type="button"
               onClick={() => {
                 setMarcados([]);
-                setNivel(null);
+                setRelato("");
+                limparResultado();
               }}
               className="rounded-xl border border-zinc-200 px-6 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
             >
@@ -185,10 +191,38 @@ export default function OQueVoceTemPage() {
           ) : null}
         </div>
 
-        {nivel ? (
-          <section id="resultado-triagem" role="status" className={`mt-6 rounded-2xl border-2 p-6 ${resultado[nivel].cor}`}>
-            <h2 className="text-xl font-bold">{resultado[nivel].titulo}</h2>
+        {erro ? (
+          <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+            {erro}
+          </p>
+        ) : null}
+
+        {nivel && resultadoIa ? (
+          <section id="resultado-triagem" role="status" aria-live="polite" className={`mt-6 rounded-2xl border-2 p-6 ${resultado[nivel].cor}`}>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold">{resultado[nivel].titulo}</h2>
+              <span className="rounded-full border border-current px-2.5 py-0.5 text-[11px] font-semibold opacity-80">
+                {resultadoIa.fonte === "ia+regras" ? "Analisado por IA + regras de segurança" : "Analisado por regras de segurança"}
+              </span>
+            </div>
             <p className="mt-2 text-sm leading-relaxed">{resultado[nivel].texto}</p>
+            <div className="mt-4 rounded-xl bg-white/60 p-4 text-sm dark:bg-black/20">
+              <p className="font-semibold">Por que essa orientação?</p>
+              <p className="mt-1 leading-relaxed">{resultadoIa.justificativa}</p>
+              {resultadoIa.sinais.length > 0 ? (
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {resultadoIa.sinais.map((s) => (
+                    <li key={s} className="rounded-full bg-black/5 px-2.5 py-1 text-xs dark:bg-white/10">{s}</li>
+                  ))}
+                </ul>
+              ) : null}
+              {resultadoIa.regraDeSegurancaAplicada ? (
+                <p className="mt-2 text-xs font-semibold">A regra de segurança elevou a gravidade em relação à sugestão da IA.</p>
+              ) : null}
+              {resultadoIa.especialidadeSugerida ? (
+                <p className="mt-2 text-xs">Especialidade sugerida: <strong>{resultadoIa.especialidadeSugerida}</strong></p>
+              ) : null}
+            </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {nivel === "EMERGENCIA" ? (
                 <a href="tel:192" className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-700">

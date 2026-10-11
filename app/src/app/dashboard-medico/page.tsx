@@ -7,6 +7,7 @@ import { getSession, removeSession } from "@/lib/authSession";
 import { registrarAuditoria } from "@/lib/auditLog";
 import { BottomNav } from "@/components/BottomNav";
 import { SenhaModal } from "@/components/SenhaModal";
+import { FilaAtendimento } from "@/components/medico/FilaAtendimento";
 
 const especialidades = [
   { nome: "Clínica Geral", quantidade: 42 },
@@ -117,6 +118,8 @@ export default function DashboardMedicoPage() {
             </button>
           </div>
         </header>
+
+        <FilaAtendimento />
 
         <section className="mt-8 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

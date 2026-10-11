@@ -5,13 +5,7 @@ import { useRouter } from "next/navigation";
 import { getSession, removeSession } from "@/lib/authSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BottomNav } from "@/components/BottomNav";
-
-const dadosSucesso = [
-  { label: "Médicos cadastrados", valor: "12" },
-  { label: "Pacientes cadastrados", valor: "348" },
-  { label: "Consultas agendadas (mês)", valor: "1.284" },
-  { label: "Taxa de comparecimento", valor: "88%" },
-];
+import { IndicadoresSql } from "@/components/admin/IndicadoresSql";
 
 const especialidades = [
   { nome: "Clínica Médica (Geral)", absoluta: 2250, relativa: 45, acumulada: 45, cor: "#4f46e5" },
@@ -22,9 +16,9 @@ const especialidades = [
 ];
 
 const insights = [
-  "Clínica Médica concentra 45% da demanda — é a porta de entrada da UBS; atrasos aqui travam todo o fluxo de encaminhamentos.",
-  "Pediatria representa 20% — em regiões populosas, mutirões sazonais (ex.: doenças respiratórias) podem aliviar picos.",
-  "Saúde Mental é a menor fatia (8%), mas pode refletir dificuldade de acesso ou estigma — um canal digital discreto tende a aumentar a procura real.",
+  "Clínica Médica concentra 45% da demanda: é a porta de entrada da UBS; atrasos aqui travam todo o fluxo de encaminhamentos.",
+  "Pediatria representa 20%; em regiões populosas, mutirões sazonais (ex.: doenças respiratórias) podem aliviar picos.",
+  "Saúde Mental é a menor fatia (8%), mas pode refletir dificuldade de acesso ou estigma; um canal digital discreto tende a aumentar a procura real.",
 ];
 
 export default function DashboardAdministradorPage() {
@@ -58,7 +52,7 @@ export default function DashboardAdministradorPage() {
               Administração da UBS
             </h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-              Indicadores de uso do sistema e análise de demanda por especialidade.
+              Indicadores calculados no banco de dados com SQL e análise de demanda por especialidade.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -90,17 +84,9 @@ export default function DashboardAdministradorPage() {
           </div>
         </header>
 
-                <section className="mt-8 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
-          {dadosSucesso.map((item) => (
-            <div key={item.label} className="flex-1 px-6 py-4 sm:min-w-[160px]">
-              <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                {item.label}
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-indigo-600">{item.valor}</p>
-            </div>
-          ))}
-        </section>
+        <IndicadoresSql />
 
+        <h2 className="mt-16 text-xl font-semibold text-zinc-900 dark:text-zinc-50">Análise de demanda por especialidade</h2>
 
         <section className="mt-16 grid gap-16">
           <div>

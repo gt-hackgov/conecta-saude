@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, removeSession } from "@/lib/authSession";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { BottomNav } from "@/components/BottomNav";
+import { getSession } from "@/lib/authSession";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { IndicadoresSql } from "@/components/admin/IndicadoresSql";
 
 const especialidades = [
-  { nome: "Clínica Médica (Geral)", absoluta: 2250, relativa: 45, acumulada: 45, cor: "#4f46e5" },
-  { nome: "Pediatria", absoluta: 1000, relativa: 20, acumulada: 65, cor: "#10b981" },
-  { nome: "Ginecologia e Obstetrícia", absoluta: 750, relativa: 15, acumulada: 80, cor: "#f59e0b" },
-  { nome: "Odontologia", absoluta: 600, relativa: 12, acumulada: 92, cor: "#0ea5e9" },
-  { nome: "Saúde Mental (Psi.)", absoluta: 400, relativa: 8, acumulada: 100, cor: "#f43f5e" },
+  { nome: "Clínica Médica (Geral)", absoluta: 2250, relativa: 45, acumulada: 45, cor: "#0284c7" },
+  { nome: "Pediatria", absoluta: 1000, relativa: 20, acumulada: 65, cor: "#0f766e" },
+  { nome: "Ginecologia e Obstetrícia", absoluta: 750, relativa: 15, acumulada: 80, cor: "#38bdf8" },
+  { nome: "Odontologia", absoluta: 600, relativa: 12, acumulada: 92, cor: "#5eead4" },
+  { nome: "Saúde Mental (Psi.)", absoluta: 400, relativa: 8, acumulada: 100, cor: "#94a3b8" },
 ];
 
 const insights = [
@@ -42,128 +41,158 @@ export default function DashboardAdministradorPage() {
     return null;
   }
 
+  const gradientePizza = (() => {
+    let acumulado = 0;
+    const partes: string[] = [];
+    especialidades.forEach((item) => {
+      partes.push(`${item.cor} ${acumulado}%`);
+      acumulado += item.relativa;
+      partes.push(`${item.cor} ${acumulado}%`);
+    });
+    return `conic-gradient(${partes.join(", ")})`;
+  })();
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
-      <div className="mx-auto w-full max-w-6xl">
-        <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-indigo-600">Administração</p>
-            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Administração da UBS
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-              Indicadores calculados no banco de dados com SQL e análise de demanda por especialidade.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/admin/usuarios")}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-            >
-              Cadastrar usuários
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard-administrador/auditoria")}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-            >
-              Auditoria
-            </button>
-            <ThemeToggle />
-            <button
-              type="button"
-              onClick={() => {
-                removeSession();
-                router.push("/");
-              }}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-            >
-              Sair
-            </button>
-          </div>
-        </header>
-
-        <IndicadoresSql />
-
-        <h2 className="mt-16 text-xl font-semibold text-zinc-900 dark:text-zinc-50">Análise de demanda por especialidade</h2>
-
-        <section className="mt-16 grid gap-16">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Demanda por especialidade
-            </h2>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Amostra de 5.000 solicitações mensais
-            </p>
-            <div className="mt-6 space-y-3">
-              {especialidades.map((item) => (
-                <div key={item.nome}>
-                  <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
-                    <span>{item.nome}</span>
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                      {item.relativa}%
-                    </span>
-                  </div>
-                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${item.relativa}%`, backgroundColor: item.cor }}
-                    />
-                  </div>
-                </div>
-              ))}
+    <AdminShell
+      title="Dashboard Administrativo"
+      description="Acompanhe os principais indicadores e gerencie a plataforma Conecta Saúde."
+    >
+          <section
+            id="visao-geral"
+            className="relative mt-8 scroll-mt-6 overflow-hidden rounded-2xl border border-sky-100 bg-white bg-cover bg-right bg-no-repeat shadow-[0_12px_40px_-28px_rgba(14,116,144,0.45)] dark:border-zinc-800"
+            style={{ backgroundImage: "url('/dashboard-admin-hero.png')" }}
+          >
+            <div className="relative max-w-xl p-6 sm:p-8">
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                Visão geral da plataforma
+              </h2>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-zinc-600">
+                Acompanhe o desempenho, gerencie usuários e mantenha a plataforma funcionando com
+                qualidade e segurança.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push("/admin/usuarios")}
+                className="mt-6 inline-flex h-11 items-center rounded-full bg-sky-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+              >
+                Cadastrar usuário
+              </button>
             </div>
-          </div>
+          </section>
 
-        </section>
+          <section id="indicadores" className="mt-10 scroll-mt-6">
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-sky-700 uppercase dark:text-sky-300">
+              Indicadores
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              Indicadores da plataforma
+            </h2>
+            <IndicadoresSql />
+          </section>
 
-        <section className="mt-16 overflow-x-auto rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Tabela de frequência
-          </h2>
-          <table className="mt-6 w-full text-left text-sm">
-            <thead>
-            <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                <th className="py-2 pr-4">Especialidade</th>
-                <th className="py-2 pr-4 text-center">Freq. Absoluta</th>
-                <th className="py-2 pr-4 text-center">Freq. Relativa</th>
-                <th className="py-2 text-center">Freq. Acumulada</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {especialidades.map((item) => (
-                <tr key={item.nome}>
-                  <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">{item.nome}</td>
-                  <td className="py-3 pr-4 text-center text-zinc-700 dark:text-zinc-300">{item.absoluta}</td>
-                  <td className="py-3 pr-4 text-center text-zinc-700 dark:text-zinc-300">{item.relativa}%</td>
-                  <td className="py-3 text-center text-zinc-700 dark:text-zinc-300">{item.acumulada}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+          <section className="mt-10 rounded-2xl border border-dashed border-sky-200/90 bg-white/70 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-950/60">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.16em] text-zinc-500 uppercase dark:text-zinc-400">
+                  Amostra demonstrativa
+                </p>
+                <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+                  Demanda por especialidade
+                </h2>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Amostra de 5.000 solicitações mensais. Não faz parte dos indicadores operacionais.
+              </p>
+            </div>
 
-        <section className="mt-16">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Insights para gestão
-          </h2>
-            <ul className="mt-4 space-y-4">
-            {insights.map((texto) => (
-              <li key={texto} className="flex items-start gap-3 text-sm text-zinc-700 dark:text-zinc-300">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </span>
-                {texto}
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+            <div className="mt-8 grid gap-10 lg:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  Participação relativa
+                </h3>
+                <div className="mt-5 space-y-4">
+                  {especialidades.map((item) => (
+                    <div key={item.nome}>
+                      <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
+                        <span>{item.nome}</span>
+                        <span className="font-medium text-zinc-800 dark:text-zinc-200">{item.relativa}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-sky-50 dark:bg-zinc-800">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${item.relativa}%`, backgroundColor: item.cor }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-      <BottomNav />
-    </div>
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  Distribuição
+                </h3>
+                <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+                  <div
+                    className="size-44 shrink-0 rounded-full"
+                    style={{ backgroundImage: gradientePizza }}
+                    role="img"
+                    aria-label="Gráfico de participação percentual por especialidade"
+                  />
+                  <ul className="space-y-2">
+                    {especialidades.map((item) => (
+                      <li key={item.nome} className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+                        <span className="size-2.5 rounded-full" style={{ backgroundColor: item.cor }} />
+                        {item.nome} — {item.relativa}%
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-10 overflow-x-auto">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Tabela de frequência
+              </h3>
+              <table className="mt-4 w-full min-w-[36rem] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-sky-100 text-[11px] tracking-wide text-zinc-500 uppercase dark:border-zinc-800 dark:text-zinc-400">
+                    <th className="py-3 pr-4 font-medium">Especialidade</th>
+                    <th className="py-3 pr-4 text-right font-medium">Freq. absoluta</th>
+                    <th className="py-3 pr-4 text-right font-medium">Freq. relativa</th>
+                    <th className="py-3 text-right font-medium">Freq. acumulada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {especialidades.map((item) => (
+                    <tr key={item.nome} className="border-b border-sky-50 last:border-0 dark:border-zinc-800/80">
+                      <td className="py-3 pr-4 text-zinc-800 dark:text-zinc-100">{item.nome}</td>
+                      <td className="py-3 pr-4 text-right text-zinc-600 dark:text-zinc-300">{item.absoluta}</td>
+                      <td className="py-3 pr-4 text-right text-zinc-600 dark:text-zinc-300">{item.relativa}%</td>
+                      <td className="py-3 text-right text-zinc-600 dark:text-zinc-300">{item.acumulada}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-10">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Insights para gestão
+              </h3>
+              <ul className="mt-4 grid gap-3">
+                {insights.map((texto) => (
+                  <li
+                    key={texto}
+                    className="rounded-xl bg-sky-50/70 px-4 py-3 text-sm leading-relaxed text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                  >
+                    {texto}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+    </AdminShell>
   );
 }

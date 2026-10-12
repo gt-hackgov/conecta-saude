@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { A11Y_KEYS, applyAccessibilityPreferences } from "@/lib/accessibility";
+import { getSession } from "@/lib/authSession";
+import { AdminShell } from "@/components/admin/AdminShell";
 
 export default function ConfiguracoesPage() {
   const router = useRouter();
@@ -12,6 +14,14 @@ export default function ConfiguracoesPage() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [colorblind, setColorblind] = useState<"nenhum" | "protanopia" | "deuteranopia" | "tritanopia">("nenhum");
   const [lendo, setLendo] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkedRole, setCheckedRole] = useState(false);
+
+  useEffect(() => {
+    const session = getSession();
+    setIsAdmin(Boolean(session?.token && session.role === "ADMIN"));
+    setCheckedRole(true);
+  }, []);
 
   useEffect(() => {
     setFontInput(localStorage.getItem(A11Y_KEYS.fontScale) ?? "100");
@@ -68,27 +78,9 @@ export default function ConfiguracoesPage() {
     setLendo(false);
   };
 
-  return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
-      <div className="mx-auto w-full max-w-3xl">
-        <header className="flex items-center justify-between rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
-          <div>
-            <p className="text-sm font-semibold text-indigo-600">Configurações</p>
-            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">Acessibilidade</h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Personalize o sistema para atender às suas necessidades visuais e de leitura.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Voltar
-          </button>
-        </header>
-
-        <p className="mt-4 rounded-xl bg-indigo-50 px-4 py-3 text-xs text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
+  const preferencias = (
+    <>
+        <p className="mt-8 rounded-xl bg-sky-50 px-4 py-3 text-xs text-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
           As preferências são salvas neste navegador, então já funcionam antes do login e continuam ativas depois que você entra.
         </p>
 
@@ -230,6 +222,44 @@ export default function ConfiguracoesPage() {
             ))}
           </div>
         </section>
+    </>
+  );
+
+  if (!checkedRole) {
+    return null;
+  }
+
+  if (isAdmin) {
+    return (
+      <AdminShell
+        title="Configurações"
+        description="Personalize o sistema para atender às suas necessidades visuais e de leitura."
+      >
+        {preferencias}
+      </AdminShell>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
+      <div className="mx-auto w-full max-w-3xl">
+        <header className="flex items-center justify-between rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
+          <div>
+            <p className="text-sm font-semibold text-indigo-600">Configurações</p>
+            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">Acessibilidade</h1>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Personalize o sistema para atender às suas necessidades visuais e de leitura.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+          >
+            Voltar
+          </button>
+        </header>
+        {preferencias}
       </div>
     </main>
   );

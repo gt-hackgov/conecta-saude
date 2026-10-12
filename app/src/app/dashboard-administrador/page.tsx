@@ -1,20 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  BarChart3,
-  ClipboardList,
-  HeartPulse,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
-import { getSession, removeSession } from "@/lib/authSession";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { getSession } from "@/lib/authSession";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { IndicadoresSql } from "@/components/admin/IndicadoresSql";
 
 const especialidades = [
@@ -31,69 +20,14 @@ const insights = [
   "Saúde Mental é a menor fatia (8%), mas pode refletir dificuldade de acesso ou estigma; um canal digital discreto tende a aumentar a procura real.",
 ];
 
-const navItems: { href: string; label: string; icon: LucideIcon; current?: boolean }[] = [
-  { href: "#visao-geral", label: "Visão geral", icon: LayoutDashboard, current: true },
-  { href: "/admin/usuarios", label: "Usuários", icon: Users },
-  { href: "#indicadores", label: "Indicadores", icon: BarChart3 },
-  { href: "/dashboard-administrador/auditoria", label: "Auditoria", icon: ClipboardList },
-  { href: "/configuracoes", label: "Configurações", icon: Settings },
-];
-
-function navClass(current?: boolean) {
-  return [
-    "inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600",
-    current
-      ? "bg-sky-50 text-sky-800 dark:bg-sky-950/60 dark:text-sky-100"
-      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50",
-  ].join(" ");
-}
-
-function AdminNavLinks() {
-  return (
-    <>
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const content = (
-          <>
-            <Icon className="size-4 shrink-0" aria-hidden="true" />
-            {item.label}
-          </>
-        );
-
-        if (item.href.startsWith("#")) {
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              className={navClass(item.current)}
-              aria-current={item.current ? "page" : undefined}
-            >
-              {content}
-            </a>
-          );
-        }
-
-        return (
-          <Link key={item.href} href={item.href} className={navClass()}>
-            {content}
-          </Link>
-        );
-      })}
-    </>
-  );
-}
-
 export default function DashboardAdministradorPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminName, setAdminName] = useState<string | null>(null);
 
   useEffect(() => {
     const session = getSession();
-    const allowed = Boolean(session?.token && session.role === "ADMIN");
-    setIsAdmin(allowed);
-    setAdminName(allowed ? session?.nome ?? null : null);
+    setIsAdmin(Boolean(session?.token && session.role === "ADMIN"));
     setCheckedAuth(true);
   }, []);
 
@@ -102,11 +36,6 @@ export default function DashboardAdministradorPage() {
       router.replace("/");
     }
   }, [checkedAuth, isAdmin, router]);
-
-  const handleLogout = () => {
-    removeSession();
-    router.push("/");
-  };
 
   if (!checkedAuth || !isAdmin) {
     return null;
@@ -124,106 +53,30 @@ export default function DashboardAdministradorPage() {
   })();
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-sky-50/80 font-sans dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-900">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sky-100/90 bg-white/90 px-4 py-6 backdrop-blur-xl lg:flex dark:border-zinc-800 dark:bg-zinc-950/90">
-        <div className="flex items-center gap-3 px-2">
-          <span className="flex size-10 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
-            <HeartPulse className="size-5" aria-hidden="true" />
-          </span>
-          <div>
-            <p className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-              Conecta Saúde
-            </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Administração</p>
-          </div>
-        </div>
-
-        <nav aria-label="Navegação do dashboard administrativo" className="mt-8 flex flex-col gap-1">
-          <AdminNavLinks />
-        </nav>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="mt-auto inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
-        >
-          <LogOut className="size-4" aria-hidden="true" />
-          Sair
-        </button>
-      </aside>
-
-      <div className="lg:pl-64">
-        <div className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 lg:py-10">
-          <div className="mb-6 flex items-center gap-3 lg:hidden">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-sky-600 text-white">
-              <HeartPulse className="size-4" aria-hidden="true" />
-            </span>
-            <p className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-              Conecta Saúde
-            </p>
-          </div>
-
-          <nav
-            aria-label="Navegação do dashboard administrativo"
-            className="mb-8 flex items-center gap-1 overflow-x-auto lg:hidden"
+    <AdminShell
+      title="Dashboard Administrativo"
+      description="Acompanhe os principais indicadores e gerencie a plataforma Conecta Saúde."
+    >
+          <section
+            id="visao-geral"
+            className="relative mt-8 scroll-mt-6 overflow-hidden rounded-2xl border border-sky-100 bg-white bg-cover bg-right bg-no-repeat shadow-[0_12px_40px_-28px_rgba(14,116,144,0.45)] dark:border-zinc-800"
+            style={{ backgroundImage: "url('/dashboard-admin-hero.png')" }}
           >
-            <AdminNavLinks />
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium whitespace-nowrap text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
-            >
-              <LogOut className="size-4" aria-hidden="true" />
-              Sair
-            </button>
-          </nav>
-
-          <header id="visao-geral" className="flex scroll-mt-6 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-                Dashboard Administrativo
-              </h1>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                Acompanhe os principais indicadores e gerencie a plataforma Conecta Saúde.
+            <div className="relative max-w-xl p-6 sm:p-8">
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                Visão geral da plataforma
+              </h2>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-zinc-600">
+                Acompanhe o desempenho, gerencie usuários e mantenha a plataforma funcionando com
+                qualidade e segurança.
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              {adminName ? (
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  <span className="sr-only">Administrador logado: </span>
-                  {adminName}
-                </p>
-              ) : null}
-              <ThemeToggle />
-            </div>
-          </header>
-
-          <section className="mt-8 overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-[0_12px_40px_-28px_rgba(14,116,144,0.45)] dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-                  Visão geral da plataforma
-                </h2>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                  Acompanhe o desempenho, gerencie usuários e mantenha a plataforma funcionando com
-                  qualidade e segurança.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => router.push("/admin/usuarios")}
-                  className="mt-6 inline-flex h-11 items-center rounded-full bg-sky-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
-                >
-                  Cadastrar usuário
-                </button>
-              </div>
-              <div
-                aria-hidden="true"
-                className="relative min-h-36 overflow-hidden rounded-2xl bg-gradient-to-br from-sky-100 via-white to-cyan-50 dark:from-sky-950/50 dark:via-zinc-900 dark:to-cyan-950/30"
+              <button
+                type="button"
+                onClick={() => router.push("/admin/usuarios")}
+                className="mt-6 inline-flex h-11 items-center rounded-full bg-sky-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
               >
-                <div className="absolute -top-8 -right-6 size-36 rounded-full bg-sky-200/80 blur-2xl dark:bg-sky-700/30" />
-                <div className="absolute -bottom-8 left-8 size-28 rounded-full bg-cyan-200/80 blur-2xl dark:bg-cyan-700/20" />
-                <div className="absolute top-8 left-10 size-16 rounded-full bg-emerald-100/80 blur-xl dark:bg-emerald-700/20" />
-              </div>
+                Cadastrar usuário
+              </button>
             </div>
           </section>
 
@@ -340,8 +193,6 @@ export default function DashboardAdministradorPage() {
               </ul>
             </div>
           </section>
-        </div>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

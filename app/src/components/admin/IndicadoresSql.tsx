@@ -136,9 +136,9 @@ export function IndicadoresSql() {
     <>
       <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cartoes.map((c) => (
-          <div key={c.rotulo} className={`rounded-2xl p-5 shadow-sm ${c.destaque ? "bg-indigo-600 text-white" : "bg-white dark:bg-zinc-950"}`}>
-            <p className={`text-xs uppercase tracking-wide ${c.destaque ? "text-indigo-100" : "text-zinc-500 dark:text-zinc-400"}`}>{c.rotulo}</p>
-            <p className={`mt-1 text-2xl font-semibold ${c.destaque ? "" : "text-indigo-600"}`}>{c.valor}</p>
+          <div key={c.rotulo} className={`rounded-2xl p-5 shadow-sm ${c.destaque ? "bg-sky-700 text-white" : "bg-white dark:bg-zinc-950"}`}>
+            <p className={`text-xs uppercase tracking-wide ${c.destaque ? "text-sky-100" : "text-zinc-500 dark:text-zinc-400"}`}>{c.rotulo}</p>
+            <p className={`mt-1 text-2xl font-semibold ${c.destaque ? "" : "text-sky-700 dark:text-sky-300"}`}>{c.valor}</p>
           </div>
         ))}
       </section>
@@ -176,7 +176,7 @@ export function IndicadoresSql() {
                                 <div className="flex items-center gap-2">
                                   <span className="w-14 shrink-0 tabular-nums">{formatar(c, linha[c])}</span>
                                   <span className="hidden h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800 sm:block">
-                                    <span className="block h-full rounded-full bg-indigo-500" style={{ width: `${(Number(linha[c] ?? 0) / maximo) * 100}%` }} />
+                                    <span className="block h-full rounded-full bg-sky-500" style={{ width: `${(Number(linha[c] ?? 0) / maximo) * 100}%` }} />
                                   </span>
                                 </div>
                               ) : (

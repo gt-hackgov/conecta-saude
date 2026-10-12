@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, removeSession } from "@/lib/authSession";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { BottomNav } from "@/components/BottomNav";
+import { AdminShell } from "@/components/admin/AdminShell";
 
 type AdminRole = "MEDICO" | "ADMIN" | "AUDITOR";
 
@@ -15,7 +14,7 @@ const roles: { value: AdminRole; label: string }[] = [
 ];
 
 const inputClassName =
-  "mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-indigo-400";
+  "mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-sky-400";
 
 function formatFieldErrors(fieldErrors: unknown): string | null {
   if (!fieldErrors) return null;
@@ -115,11 +114,6 @@ export default function AdminUsuariosPage() {
     }
   }, [checkedAuth, isAdmin, router]);
 
-  const handleLogout = () => {
-    removeSession();
-    router.push("/");
-  };
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (loading) return;
@@ -193,31 +187,14 @@ export default function AdminUsuariosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
-      <div className="mx-auto w-full max-w-4xl rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
-        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-indigo-600">Administração</p>
-            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Cadastrar usuários
-            </h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Crie contas de médico, administrador ou auditor.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-            >
-              Sair
-            </button>
-          </div>
-        </header>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <AdminShell
+      title="Usuários"
+      description="Crie contas de médico, administrador ou auditor."
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="mt-8 space-y-6 rounded-2xl border border-sky-100 bg-white p-6 shadow-sm sm:p-8 dark:border-zinc-800 dark:bg-zinc-950"
+      >
           <div className="grid gap-6 md:grid-cols-2">
             <label className="block">
               <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Nome</span>
@@ -282,14 +259,11 @@ export default function AdminUsuariosPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-2xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? "Cadastrando..." : "Cadastrar usuário"}
           </button>
-        </form>
-      </div>
-
-      <BottomNav />
-    </div>
+      </form>
+    </AdminShell>
   );
 }

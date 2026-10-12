@@ -1,24 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  BarChart3,
+  ClipboardList,
+  HeartPulse,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { getSession, removeSession } from "@/lib/authSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { BottomNav } from "@/components/BottomNav";
-
-const dadosSucesso = [
-  { label: "Médicos cadastrados", valor: "12" },
-  { label: "Pacientes cadastrados", valor: "348" },
-  { label: "Consultas agendadas (mês)", valor: "1.284" },
-  { label: "Taxa de comparecimento", valor: "88%" },
-];
 
 const especialidades = [
-  { nome: "Clínica Médica (Geral)", absoluta: 2250, relativa: 45, acumulada: 45, cor: "#4f46e5" },
-  { nome: "Pediatria", absoluta: 1000, relativa: 20, acumulada: 65, cor: "#10b981" },
-  { nome: "Ginecologia e Obstetrícia", absoluta: 750, relativa: 15, acumulada: 80, cor: "#f59e0b" },
-  { nome: "Odontologia", absoluta: 600, relativa: 12, acumulada: 92, cor: "#0ea5e9" },
-  { nome: "Saúde Mental (Psi.)", absoluta: 400, relativa: 8, acumulada: 100, cor: "#f43f5e" },
+  { nome: "Clínica Médica (Geral)", absoluta: 2250, relativa: 45, acumulada: 45, cor: "#0284c7" },
+  { nome: "Pediatria", absoluta: 1000, relativa: 20, acumulada: 65, cor: "#0f766e" },
+  { nome: "Ginecologia e Obstetrícia", absoluta: 750, relativa: 15, acumulada: 80, cor: "#38bdf8" },
+  { nome: "Odontologia", absoluta: 600, relativa: 12, acumulada: 92, cor: "#5eead4" },
+  { nome: "Saúde Mental (Psi.)", absoluta: 400, relativa: 8, acumulada: 100, cor: "#94a3b8" },
 ];
 
 const insights = [
@@ -27,14 +30,69 @@ const insights = [
   "Saúde Mental é a menor fatia (8%), mas pode refletir dificuldade de acesso ou estigma — um canal digital discreto tende a aumentar a procura real.",
 ];
 
+const navItems: { href: string; label: string; icon: LucideIcon; current?: boolean }[] = [
+  { href: "#visao-geral", label: "Visão geral", icon: LayoutDashboard, current: true },
+  { href: "/admin/usuarios", label: "Usuários", icon: Users },
+  { href: "#indicadores", label: "Indicadores", icon: BarChart3 },
+  { href: "/dashboard-administrador/auditoria", label: "Auditoria", icon: ClipboardList },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
+];
+
+function navClass(current?: boolean) {
+  return [
+    "inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600",
+    current
+      ? "bg-sky-50 text-sky-800 dark:bg-sky-950/60 dark:text-sky-100"
+      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50",
+  ].join(" ");
+}
+
+function AdminNavLinks() {
+  return (
+    <>
+      {navItems.map((item) => {
+        const Icon = item.icon;
+        const content = (
+          <>
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
+            {item.label}
+          </>
+        );
+
+        if (item.href.startsWith("#")) {
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              className={navClass(item.current)}
+              aria-current={item.current ? "page" : undefined}
+            >
+              {content}
+            </a>
+          );
+        }
+
+        return (
+          <Link key={item.href} href={item.href} className={navClass()}>
+            {content}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 export default function DashboardAdministradorPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminName, setAdminName] = useState<string | null>(null);
 
   useEffect(() => {
     const session = getSession();
-    setIsAdmin(Boolean(session?.token && session.role === "ADMIN"));
+    const allowed = Boolean(session?.token && session.role === "ADMIN");
+    setIsAdmin(allowed);
+    setAdminName(allowed ? session?.nome ?? null : null);
     setCheckedAuth(true);
   }, []);
 
@@ -44,178 +102,247 @@ export default function DashboardAdministradorPage() {
     }
   }, [checkedAuth, isAdmin, router]);
 
+  const handleLogout = () => {
+    removeSession();
+    router.push("/");
+  };
+
   if (!checkedAuth || !isAdmin) {
     return null;
   }
 
-    const gradientePizza = (() => {
+  const gradientePizza = (() => {
     let acumulado = 0;
     const partes: string[] = [];
-    especialidades.forEach((e) => {
-      partes.push(`${e.cor} ${acumulado}%`);
-      acumulado += e.relativa;
-      partes.push(`${e.cor} ${acumulado}%`);
+    especialidades.forEach((item) => {
+      partes.push(`${item.cor} ${acumulado}%`);
+      acumulado += item.relativa;
+      partes.push(`${item.cor} ${acumulado}%`);
     });
     return `conic-gradient(${partes.join(", ")})`;
   })();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
-      <div className="mx-auto w-full max-w-6xl">
-        <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-sky-50/80 font-sans dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-900">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sky-100/90 bg-white/90 px-4 py-6 backdrop-blur-xl lg:flex dark:border-zinc-800 dark:bg-zinc-950/90">
+        <div className="flex items-center gap-3 px-2">
+          <span className="flex size-10 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
+            <HeartPulse className="size-5" aria-hidden="true" />
+          </span>
           <div>
-            <p className="text-sm font-semibold text-indigo-600">Administração</p>
-            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Administração da UBS
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-              Indicadores de uso do sistema e análise de demanda por especialidade.
+            <p className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              Conecta Saúde
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Administração</p>
+          </div>
+        </div>
+
+        <nav aria-label="Navegação do dashboard administrativo" className="mt-8 flex flex-col gap-1">
+          <AdminNavLinks />
+        </nav>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-auto inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+        >
+          <LogOut className="size-4" aria-hidden="true" />
+          Sair
+        </button>
+      </aside>
+
+      <div className="lg:pl-64">
+        <div className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 lg:py-10">
+          <div className="mb-6 flex items-center gap-3 lg:hidden">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-sky-600 text-white">
+              <HeartPulse className="size-4" aria-hidden="true" />
+            </span>
+            <p className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              Conecta Saúde
             </p>
           </div>
-          <div className="flex items-center gap-3">
+
+          <nav
+            aria-label="Navegação do dashboard administrativo"
+            className="mb-8 flex items-center gap-1 overflow-x-auto lg:hidden"
+          >
+            <AdminNavLinks />
             <button
               type="button"
-              onClick={() => router.push("/admin/usuarios")}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium whitespace-nowrap text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
             >
-              Cadastrar usuários
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard-administrador/auditoria")}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-            >
-              Auditoria
-            </button>
-            <ThemeToggle />
-            <button
-              type="button"
-              onClick={() => {
-                removeSession();
-                router.push("/");
-              }}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-            >
+              <LogOut className="size-4" aria-hidden="true" />
               Sair
             </button>
-          </div>
-        </header>
+          </nav>
 
-                <section className="mt-8 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
-          {dadosSucesso.map((item) => (
-            <div key={item.label} className="flex-1 px-6 py-4 sm:min-w-[160px]">
-              <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                {item.label}
+          <header id="visao-geral" className="flex scroll-mt-6 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+                Dashboard Administrativo
+              </h1>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Acompanhe os principais indicadores e gerencie a plataforma Conecta Saúde.
               </p>
-              <p className="mt-1 text-2xl font-semibold text-indigo-600">{item.valor}</p>
             </div>
-          ))}
-        </section>
-
-
-        <section className="mt-16 grid gap-16">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Demanda por especialidade
-            </h2>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Amostra de 5.000 solicitações mensais
-            </p>
-            <div className="mt-6 space-y-3">
-              {especialidades.map((item) => (
-                <div key={item.nome}>
-                  <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
-                    <span>{item.nome}</span>
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                      {item.relativa}%
-                    </span>
-                  </div>
-                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${item.relativa}%`, backgroundColor: item.cor }}
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center gap-4">
+              {adminName ? (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <span className="sr-only">Administrador logado: </span>
+                  {adminName}
+                </p>
+              ) : null}
+              <ThemeToggle />
             </div>
-          </div>
+          </header>
 
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Demanda por especialidade — pizza
-            </h2>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Participação percentual de cada especialidade
-            </p>
-            <div className="mt-6 flex flex-col items-center justify-center gap-10 sm:flex-row">
+          <section className="mt-8 overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-[0_12px_40px_-28px_rgba(14,116,144,0.45)] dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+                  Visão geral da plataforma
+                </h2>
+                <p className="mt-3 max-w-lg text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                  Acompanhe o desempenho, gerencie usuários e mantenha a plataforma funcionando com
+                  qualidade e segurança.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => router.push("/admin/usuarios")}
+                  className="mt-6 inline-flex h-11 items-center rounded-full bg-sky-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                >
+                  Cadastrar usuário
+                </button>
+              </div>
               <div
-                className="h-64 w-64 shrink-0 rounded-full"
-                style={{ backgroundImage: gradientePizza }}
-              />
-              <ul className="space-y-2">
-                {especialidades.map((item) => (
-                  <li key={item.nome} className="flex items-center gap-2 text-xs">
-                    <span
-                      className="h-3 w-3 rounded-sm"
-                      style={{ backgroundColor: item.cor }}
-                    />
-                    <span className="text-zinc-700 dark:text-zinc-300">
-                      {item.nome} — {item.relativa}%
-                    </span>
+                aria-hidden="true"
+                className="relative min-h-36 overflow-hidden rounded-2xl bg-gradient-to-br from-sky-100 via-white to-cyan-50 dark:from-sky-950/50 dark:via-zinc-900 dark:to-cyan-950/30"
+              >
+                <div className="absolute -top-8 -right-6 size-36 rounded-full bg-sky-200/80 blur-2xl dark:bg-sky-700/30" />
+                <div className="absolute -bottom-8 left-8 size-28 rounded-full bg-cyan-200/80 blur-2xl dark:bg-cyan-700/20" />
+                <div className="absolute top-8 left-10 size-16 rounded-full bg-emerald-100/80 blur-xl dark:bg-emerald-700/20" />
+              </div>
+            </div>
+          </section>
+
+          <section id="indicadores" className="mt-10 scroll-mt-6">
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-sky-700 uppercase dark:text-sky-300">
+              Indicadores
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              Indicadores da plataforma
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+              Nenhum indicador operacional está disponível nesta versão da tela.
+            </p>
+          </section>
+
+          <section className="mt-10 rounded-2xl border border-dashed border-sky-200/90 bg-white/70 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-950/60">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.16em] text-zinc-500 uppercase dark:text-zinc-400">
+                  Amostra demonstrativa
+                </p>
+                <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+                  Demanda por especialidade
+                </h2>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Amostra de 5.000 solicitações mensais. Não faz parte dos indicadores operacionais.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-10 lg:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  Participação relativa
+                </h3>
+                <div className="mt-5 space-y-4">
+                  {especialidades.map((item) => (
+                    <div key={item.nome}>
+                      <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
+                        <span>{item.nome}</span>
+                        <span className="font-medium text-zinc-800 dark:text-zinc-200">{item.relativa}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-sky-50 dark:bg-zinc-800">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${item.relativa}%`, backgroundColor: item.cor }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  Distribuição
+                </h3>
+                <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+                  <div
+                    className="size-44 shrink-0 rounded-full"
+                    style={{ backgroundImage: gradientePizza }}
+                    role="img"
+                    aria-label="Gráfico de participação percentual por especialidade"
+                  />
+                  <ul className="space-y-2">
+                    {especialidades.map((item) => (
+                      <li key={item.nome} className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+                        <span className="size-2.5 rounded-full" style={{ backgroundColor: item.cor }} />
+                        {item.nome} — {item.relativa}%
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-10 overflow-x-auto">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Tabela de frequência
+              </h3>
+              <table className="mt-4 w-full min-w-[36rem] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-sky-100 text-[11px] tracking-wide text-zinc-500 uppercase dark:border-zinc-800 dark:text-zinc-400">
+                    <th className="py-3 pr-4 font-medium">Especialidade</th>
+                    <th className="py-3 pr-4 text-right font-medium">Freq. absoluta</th>
+                    <th className="py-3 pr-4 text-right font-medium">Freq. relativa</th>
+                    <th className="py-3 text-right font-medium">Freq. acumulada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {especialidades.map((item) => (
+                    <tr key={item.nome} className="border-b border-sky-50 last:border-0 dark:border-zinc-800/80">
+                      <td className="py-3 pr-4 text-zinc-800 dark:text-zinc-100">{item.nome}</td>
+                      <td className="py-3 pr-4 text-right text-zinc-600 dark:text-zinc-300">{item.absoluta}</td>
+                      <td className="py-3 pr-4 text-right text-zinc-600 dark:text-zinc-300">{item.relativa}%</td>
+                      <td className="py-3 text-right text-zinc-600 dark:text-zinc-300">{item.acumulada}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-10">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Insights para gestão
+              </h3>
+              <ul className="mt-4 grid gap-3">
+                {insights.map((texto) => (
+                  <li
+                    key={texto}
+                    className="rounded-xl bg-sky-50/70 px-4 py-3 text-sm leading-relaxed text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                  >
+                    {texto}
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
-        </section>
-
-        <section className="mt-16 overflow-x-auto rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Tabela de frequência
-          </h2>
-          <table className="mt-6 w-full text-left text-sm">
-            <thead>
-            <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                <th className="py-2 pr-4">Especialidade</th>
-                <th className="py-2 pr-4 text-center">Freq. Absoluta</th>
-                <th className="py-2 pr-4 text-center">Freq. Relativa</th>
-                <th className="py-2 text-center">Freq. Acumulada</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {especialidades.map((item) => (
-                <tr key={item.nome}>
-                  <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">{item.nome}</td>
-                  <td className="py-3 pr-4 text-center text-zinc-700 dark:text-zinc-300">{item.absoluta}</td>
-                  <td className="py-3 pr-4 text-center text-zinc-700 dark:text-zinc-300">{item.relativa}%</td>
-                  <td className="py-3 text-center text-zinc-700 dark:text-zinc-300">{item.acumulada}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-
-        <section className="mt-16">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Insights para gestão
-          </h2>
-            <ul className="mt-4 space-y-4">
-            {insights.map((texto) => (
-              <li key={texto} className="flex items-start gap-3 text-sm text-zinc-700 dark:text-zinc-300">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </span>
-                {texto}
-              </li>
-            ))}
-          </ul>
-        </section>
+          </section>
+        </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   CalendarPlus,
   FileText,
   HeartPulse,
+  Siren,
   LogOut,
   MapPin,
   MessageCircle,
@@ -314,8 +315,14 @@ export default function DashboardPage() {
               icon={<FileText className="size-5" aria-hidden="true" />}
             />
             <FeatureCard
-              title="Procurar UBS mais próxima"
-              description="Encontre a unidade básica de saúde mais próxima de você."
+              title="O que você tem? UBS ou UPA"
+              description="Responda o que está sentindo e saiba se deve ir à UBS, à UPA ou ligar 192."
+              onClick={() => router.push("/o-que-voce-tem")}
+              icon={<Siren className="size-5" aria-hidden="true" />}
+            />
+            <FeatureCard
+              title="Procurar UBS ou UPA"
+              description="Veja as especialidades de cada unidade no mapa e trace a rota."
               onClick={() => router.push("/buscar-ubs")}
               icon={<MapPin className="size-5" aria-hidden="true" />}
             />

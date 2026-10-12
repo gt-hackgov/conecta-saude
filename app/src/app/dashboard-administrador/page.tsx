@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { getSession, removeSession } from "@/lib/authSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { IndicadoresSql } from "@/components/admin/IndicadoresSql";
 
 const especialidades = [
   { nome: "Clínica Médica (Geral)", absoluta: 2250, relativa: 45, acumulada: 45, cor: "#0284c7" },
@@ -25,9 +26,9 @@ const especialidades = [
 ];
 
 const insights = [
-  "Clínica Médica concentra 45% da demanda — é a porta de entrada da UBS; atrasos aqui travam todo o fluxo de encaminhamentos.",
-  "Pediatria representa 20% — em regiões populosas, mutirões sazonais (ex.: doenças respiratórias) podem aliviar picos.",
-  "Saúde Mental é a menor fatia (8%), mas pode refletir dificuldade de acesso ou estigma — um canal digital discreto tende a aumentar a procura real.",
+  "Clínica Médica concentra 45% da demanda: é a porta de entrada da UBS; atrasos aqui travam todo o fluxo de encaminhamentos.",
+  "Pediatria representa 20%; em regiões populosas, mutirões sazonais (ex.: doenças respiratórias) podem aliviar picos.",
+  "Saúde Mental é a menor fatia (8%), mas pode refletir dificuldade de acesso ou estigma; um canal digital discreto tende a aumentar a procura real.",
 ];
 
 const navItems: { href: string; label: string; icon: LucideIcon; current?: boolean }[] = [
@@ -233,9 +234,7 @@ export default function DashboardAdministradorPage() {
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
               Indicadores da plataforma
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-              Nenhum indicador operacional está disponível nesta versão da tela.
-            </p>
+            <IndicadoresSql />
           </section>
 
           <section className="mt-10 rounded-2xl border border-dashed border-sky-200/90 bg-white/70 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-950/60">

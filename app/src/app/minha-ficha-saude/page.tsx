@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/authSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BottomNav } from "@/components/BottomNav";
+import { SenhaModal } from "@/components/SenhaModal";
+import { baixarPdfProtegido } from "@/lib/securePdf";
+import { registrarAuditoria } from "@/lib/auditLog";
 
 type FichaSaude = {
   nome: string;
@@ -62,6 +65,8 @@ export default function MinhaFichaSaudePage() {
   const [novoNome, setNovoNome] = useState("");
   const [novoParentesco, setNovoParentesco] = useState("");
   const [novoTipoSanguineo, setNovoTipoSanguineo] = useState("");
+  const [baixarAberto, setBaixarAberto] = useState(false);
+  const [avisoDownload, setAvisoDownload] = useState<string | null>(null);
 
   useEffect(() => {
     const session = getSession();
@@ -133,6 +138,36 @@ export default function MinhaFichaSaudePage() {
   };
 
   const perfil = perfis[abaAtiva];
+
+  const linhasFicha = (f: FichaSaude) => [
+    `Parentesco: ${f.parentesco}`,
+    `Tipo sanguíneo: ${f.tipoSanguineo}`,
+    `Doador: ${[f.doadorSangue ? "Sangue" : null, f.doadorOrgaos ? "Órgãos" : null].filter(Boolean).join(" e ") || "Não é doador"}`,
+    `Religião (relevante p/ transfusão): ${f.religiao}`,
+    `Alergias: ${f.alergias.length > 0 ? f.alergias.join(", ") : "Nenhuma relatada"}`,
+    `Atividade física: ${f.atividadeFisica}`,
+    `Condição cardiovascular: ${f.condicaoCardiovascular}`,
+    `Status sorológico: ${f.statusSorologico}`,
+    `Contato de emergência: ${f.contatoEmergencia.nome} (${f.contatoEmergencia.parentesco}) — ${f.contatoEmergencia.telefone}`,
+  ];
+
+  const baixarFicha = async (senha: string) => {
+    await baixarPdfProtegido(
+      {
+        titulo: `Ficha de saúde — ${perfil.nome}`,
+        subtitulo: perfil.parentesco === "Você" ? "Titular" : `Dependente (${perfil.parentesco})`,
+        secoes: [{ titulo: "Dados de saúde", linhas: linhasFicha(perfil) }],
+      },
+      senha,
+      `ficha-saude-${perfil.nome.split(" ")[0].toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")}.pdf`
+    );
+    const session = getSession();
+    if (session) {
+      registrarAuditoria({ ator: session.nome, perfil: session.role, acao: "EXPORTACAO_DADOS", alvo: `Ficha de saúde (PDF) — ${perfil.nome}` });
+    }
+    setAvisoDownload("Ficha baixada. Para abrir o PDF, use sua senha de login.");
+    setTimeout(() => setAvisoDownload(null), 5000);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
@@ -221,7 +256,20 @@ export default function MinhaFichaSaudePage() {
         ) : null}
 
         <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-zinc-950">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{perfil.nome}</h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{perfil.nome}</h2>
+            <button
+              type="button"
+              onClick={() => setBaixarAberto(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Baixar ficha (PDF)
+            </button>
+          </div>
+          {avisoDownload ? (
+            <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{avisoDownload}</p>
+          ) : null}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">Tipo sanguíneo</p>
@@ -272,6 +320,13 @@ export default function MinhaFichaSaudePage() {
           Para adicionar ou editar um dependente, procure atendimento presencial na UBS com um documento de identificação.
         </p>
       </div>
+
+      <SenhaModal
+        open={baixarAberto}
+        titulo="Baixar ficha de saúde"
+        onClose={() => setBaixarAberto(false)}
+        onConfirmado={baixarFicha}
+      />
 
       <BottomNav />
     </div>

@@ -4,8 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession } from "@/lib/authSession";
 import { registrarAuditoria } from "@/lib/auditLog";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { BottomNav } from "@/components/BottomNav";
+import { MedicoShell } from "@/components/medico/MedicoShell";
 
 type Paciente = {
   cpf: string;
@@ -147,18 +146,15 @@ function FichaPacienteContent() {
 
   if (!paciente) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-900">
-        <div className="text-center">
-          <p className="text-zinc-600 dark:text-zinc-400">Paciente não encontrado.</p>
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard-medico")}
-            className="mt-4 text-sm font-semibold text-indigo-600 hover:underline"
-          >
-            ← Voltar ao painel
-          </button>
-        </div>
-      </div>
+      <MedicoShell title="Ficha do paciente" description="Paciente não encontrado.">
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard-medico")}
+          className="mt-8 text-sm font-semibold text-sky-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:text-sky-300"
+        >
+          ← Voltar ao painel
+        </button>
+      </MedicoShell>
     );
   }
 
@@ -166,26 +162,18 @@ function FichaPacienteContent() {
   const totalFaltas = paciente.historico.filter((h) => h.status === "Faltou").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-white px-6 py-10 pb-24 dark:bg-none dark:bg-zinc-900">
-      <div className="mx-auto w-full max-w-4xl">
-        <header className="flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-lg dark:bg-zinc-950 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-indigo-600">Ficha do paciente</p>
-            <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50">{nome}</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard-medico")}
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-            >
-              Voltar ao painel
-            </button>
-            <ThemeToggle />
-          </div>
-        </header>
+    <MedicoShell title={nome} description="Ficha do paciente">
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard-medico")}
+            className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+          >
+            Voltar ao painel
+          </button>
+        </div>
 
-        <section className="mt-6 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl bg-white shadow-sm dark:divide-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
+        <section className="mt-6 flex flex-wrap divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-950 sm:flex-nowrap sm:divide-y-0 sm:divide-x">
           <div className="flex-1 px-6 py-4 sm:min-w-[160px]">
             <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">CPF</p>
             <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
@@ -300,10 +288,7 @@ function FichaPacienteContent() {
         <p className="mt-4 text-xs text-zinc-400">
           CPF exibido de forma mascarada, seguindo boa prática de proteção de dados sensíveis.
         </p>
-      </div>
-
-      <BottomNav />
-    </div>
+    </MedicoShell>
   );
 }
 

@@ -59,8 +59,7 @@ export default function DashboardAdministradorPage() {
     >
           <section
             id="visao-geral"
-            className="relative mt-8 scroll-mt-6 overflow-hidden rounded-2xl border border-sky-100 bg-white bg-cover bg-right bg-no-repeat shadow-[0_12px_40px_-28px_rgba(14,116,144,0.45)] dark:border-zinc-800"
-            style={{ backgroundImage: "url('/dashboard-admin-hero.png')" }}
+            className="relative mt-8 scroll-mt-6 overflow-hidden rounded-2xl border border-sky-100 bg-white bg-cover bg-right bg-no-repeat shadow-[0_12px_40px_-28px_rgba(14,116,144,0.45)] md:bg-[url('/dashboard-admin-hero.png')] dark:border-zinc-800"
           >
             <div className="relative max-w-xl p-6 sm:p-8">
               <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
@@ -90,8 +89,12 @@ export default function DashboardAdministradorPage() {
             <IndicadoresSql />
           </section>
 
-          <section className="mt-10 rounded-2xl border border-dashed border-sky-200/90 bg-white/70 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-950/60">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <details className="group mt-10 rounded-2xl border border-dashed border-sky-200/90 bg-white/70 p-6 sm:p-8 dark:border-zinc-700 dark:bg-zinc-950/60">
+            <summary className="cursor-pointer list-none text-sm font-medium text-sky-700 dark:text-sky-300">
+              <span className="group-open:hidden">Ver amostra demonstrativa (Fase 2) ▸</span>
+              <span className="hidden group-open:inline">Ocultar amostra demonstrativa ▾</span>
+            </summary>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.16em] text-zinc-500 uppercase dark:text-zinc-400">
                   Amostra demonstrativa
@@ -192,7 +195,7 @@ export default function DashboardAdministradorPage() {
                 ))}
               </ul>
             </div>
-          </section>
+          </details>
     </AdminShell>
   );
 }

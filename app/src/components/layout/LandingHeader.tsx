@@ -1,14 +1,11 @@
 import { Globe } from "lucide-react";
+import { LogoMarca } from "@/components/layout/LogoMarca";
 import { Button } from "@/components/ui/button";
 
 export function LandingHeader() {
   return (
     <header className="flex items-center justify-between gap-4 py-6">
-      <img
-        src="/conecta_saude_logo_transparente_8k.png"
-        alt="Conecta Saúde"
-        className="h-24 w-auto sm:h-32 dark:rounded-lg dark:bg-white dark:p-1.5"
-      />
+      <LogoMarca />
 
       <Button
         variant="ghost"

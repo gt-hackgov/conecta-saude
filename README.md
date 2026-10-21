@@ -1,100 +1,226 @@
 # 🏥 Conecta Saúde
 
-Plataforma de agendamento digital para Unidades Básicas de Saúde (UBS) do SUS, com painel de gestão para profissionais de saúde.
+**O SUS na palma da mão: IA que orienta o cidadão para o lugar certo, na hora certa.**
 
-Conecta Saúde é uma aplicação frontend desenvolvida com Next.js e React, que conecta cidadãos e profissionais de saúde em um único sistema de agendamento, com indicadores de gestão para a UBS.
+Plataforma do projeto HackGov (FIAP · Sistemas de Informação) que conecta **cidadão**, **profissional de saúde** e **gestor** da rede pública. O cidadão descreve o que sente e recebe a orientação: **192 (SAMU), UPA ou UBS**. A fila da UPA é organizada por gravidade, e o gestor acompanha indicadores para decidir com dados.
+
+> Projeto acadêmico. Os dados de atendimento são **sintéticos** (simulados), e o login gov.br é **simulado**.
+
+Este repositório é o **front-end**. O back-end fica em [gt-hackgov/conectasaudebe](https://github.com/gt-hackgov/conectasaudebe).
+
+---
 
 ## ✨ Funcionalidades
 
-### 🏠 Página inicial
-- Apresentação da plataforma
-- Escolha de perfil (paciente ou médico) antes do login
-
-### 👤 Paciente
-- Login simulado (padrão gov.br)
-- Agendar consulta e exame
-- Consultar histórico de consultas agendadas
-- Buscar UBS mais próxima
+### 👤 Paciente (cidadão)
+- **"O que você tem?"**: triagem assistida por IA com **trava de segurança** (detalhes abaixo).
+- Chatbot de dúvidas.
+- Agendamento de consultas e exames, histórico de consultas agendadas.
+- Busca de UBS, resultados de exames, vacinas, ficha de saúde e perfil.
 
 ### 🩺 Médico
-- Painel com volume de agendamentos por especialidade
-- Lista de consultas do dia com marcação de risco de falta
-- Exportação da lista de triagem em CSV (pacientes de risco alto)
-- Painel de Administração da UBS: indicadores de uso, gráficos (barras e pizza), tabela de frequência e insights de gestão
+- **Fila de atendimento por risco** (Protocolo de Manchester), com o botão "Chamar próximo". A fila mostra só as iniciais do paciente.
+- Consultas do dia, com indicação de risco de falta.
+- Indicadores da unidade.
+
+### 🛠️ Administrador
+- **Indicadores da plataforma** calculados por consultas SQL no back-end: faltas por especialidade, espera média, demanda por dia e casos de baixo risco na UPA.
+- Cadastro e gestão de usuários.
+- Trilha de auditoria.
+- A amostra demonstrativa da Fase 2 (demanda por especialidade) fica recolhida no painel.
 
 ### 🌗 Geral
-- Alternância entre modo claro e escuro (com preferência salva no navegador)
+- Modo claro e escuro, layout responsivo para celular e computador.
+
+---
+
+## 🤖 Como a triagem com IA decide
+
+São três camadas, e o resultado final é **sempre o mais grave**:
+
+1. **Regras fixas**: sinais de alarme (dor no peito, desmaio, falta de ar, sinais de AVC...) levam direto ao **192**.
+2. **IA**: lê o relato livre e devolve o nível (192, UPA ou UBS) com a justificativa.
+3. **Trava**: a IA pode **aumentar** a gravidade, nunca diminuir.
+
+Se não houver chave de IA ou a IA estiver fora do ar, o sistema continua funcionando **só com as regras** (a tela mostra "Analisado por regras de segurança"). O relato do sintoma **não é salvo**.
+
+IA usada (gratuita, sem cartão): **Llama 3.3 70B via Groq**. O **Gemini** (Google AI Studio) é uma alternativa, escolhida por configuração.
+
+---
+
+## 🧱 Arquitetura
+
+```
+Navegador ──► Front-end (Next.js, este repositório) ──/api/*──► Back-end (Spring Boot)
+                    │                                                │
+                    └── rotas /api/triagem e /api/chatbot ──► IA     └── Banco H2 (em memória)
+                        (a chave da IA fica só no servidor)
+```
+
+- O front-end repassa as chamadas `/api/*` ao back-end (configurado em `next.config.ts`, pela variável `BACKEND_URL`).
+- O login gera um token **JWT**; cada perfil (PACIENTE, MEDICO, ADMIN) só acessa as próprias rotas, e a verificação acontece no servidor.
 
 ## 🚀 Tecnologias
 
-- **Next.js 16** (App Router, Turbopack) — framework principal
-- **React 19**
-- **TypeScript**
-- **Tailwind CSS 4** — estilização
+| Camada | Tecnologia |
+|---|---|
+| Front-end | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| Back-end | Java 21, Spring Boot, Spring Security (JWT + BCrypt), JPA, H2 |
+| IA | Groq (Llama 3.3 70B) ou Google Gemini, ambos no plano gratuito |
+| Qualidade | GitHub Actions (build em cada PR), testes automatizados no back-end |
 
-## 📦 Instalação
+---
+
+## 📦 Como rodar localmente
+
+São **dois projetos** e **dois terminais**: primeiro o back-end, depois o front-end.
 
 ### Pré-requisitos
-- Node.js 20+
-- npm
+- Node.js 20+ e npm
+- Java 21 (o back-end já vem com o Maven Wrapper, `mvnw`)
 
-### 1. Clone o repositório
+### 1. Back-end (terminal 1)
+
+```bash
+git clone https://github.com/gt-hackgov/conectasaudebe.git
+cd conectasaudebe/api
+```
+
+Defina as variáveis de ambiente e suba o servidor. Exemplo no **PowerShell (Windows)**:
+
+```powershell
+$env:JWT_SECRET="MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+$env:SPRING_PROFILES_ACTIVE="dev"
+$env:DEV_USER_CPF="11111111111";     $env:DEV_USER_NAME="Admin";   $env:DEV_USER_PASSWORD="Admin@123"
+$env:DEV_MEDICO_CPF="22222222222";   $env:DEV_MEDICO_NAME="Joao";  $env:DEV_MEDICO_PASSWORD="Medico@123"
+$env:DEV_PACIENTE_CPF="33333333333"; $env:DEV_PACIENTE_NAME="Maria"; $env:DEV_PACIENTE_PASSWORD="Paciente@123"
+.\mvnw.cmd spring-boot:run
+```
+
+No Linux ou macOS, use `export NOME=valor` e `./mvnw spring-boot:run`.
+
+O back-end sobe em `http://localhost:8080`. O `JWT_SECRET` acima serve **só para desenvolvimento local**.
+
+### 2. Front-end (terminal 2)
+
 ```bash
 git clone https://github.com/gt-hackgov/conecta-saude.git
 cd conecta-saude/app
-```
-
-### 2. Instale as dependências
-```bash
 npm install
 ```
 
-### 3. Execute o projeto
+Copie `app/.env.example` para `app/.env.local` e preencha:
+
+```env
+BACKEND_URL=http://localhost:8080
+GROQ_API_KEY=sua_chave_gratuita        # https://console.groq.com/keys
+GROQ_MODEL=llama-3.3-70b-versatile
+# ou, no lugar do Groq:
+# GEMINI_API_KEY=sua_chave_gratuita    # https://aistudio.google.com/apikey
+```
+
+> ⚠️ **Nunca** envie o `.env.local` nem chaves para o GitHub. Ele já está no `.gitignore`. Cada integrante gera a sua chave gratuita.
+
+Rode:
+
 ```bash
-npm run dev
+npm run dev          # desenvolvimento
+# ou, para apresentar (mais rápido e estável):
+npm run build
+npm start
 ```
 
 Acesse: http://localhost:3000
 
-## 🔐 Credenciais de teste
+### 🔐 Usuários de teste (perfil `dev` do back-end)
 
-| CPF | Senha |
-|---|---|
-| 129.259.450-07 | saude123 |
+| Perfil | CPF | Senha |
+|---|---|---|
+| Paciente | 333.333.333-33 | Paciente@123 |
+| Médico | 222.222.222-22 | Medico@123 |
+| Administrador | 111.111.111-11 | Admin@123 |
 
-Funciona para os dois perfis (paciente e médico) — não existe, ainda, distinção real de permissões por usuário (ver aviso de segurança abaixo).
+Os usuários são criados ao iniciar o back-end. O banco é **em memória**: ao reiniciar o back-end, os dados voltam ao estado inicial.
+
+### ❓ Problemas comuns
+
+| Sintoma | Causa provável | Solução |
+|---|---|---|
+| "Erro interno" ou falha no login | O back-end não está rodando, ou faltaram as variáveis | Confira o terminal 1 e as variáveis `DEV_*` e `JWT_SECRET` |
+| Login recusado com CPF antigo (129.259.450-07) | Esse usuário era da versão simulada antiga | Use os usuários de teste acima |
+| Triagem mostra "Analisado por regras de segurança" | Sem chave de IA no `.env.local` | Preencha `GROQ_API_KEY` e reinicie o `npm run dev` |
+| Indicadores não carregam | O back-end está fora do ar ou o login não é de ADMIN | Suba o back-end e entre como administrador |
+
+---
 
 ## 🛣️ Rotas principais
 
-| Rota | Descrição |
-|---|---|
-| `/` | Página inicial e login |
-| `/agendar-consulta` | Agendamento (paciente) |
-| `/consultas-agendadas` | Histórico (paciente) |
-| `/dashboard` | Painel do paciente |
-| `/dashboard-medico` | Painel do médico |
-| `/dashboard-medico/administracao` | Administração da UBS |
+| Rota | Perfil | Descrição |
+|---|---|---|
+| `/` | todos | Página inicial e login |
+| `/dashboard` | Paciente | Painel do paciente |
+| `/o-que-voce-tem` | Paciente | Triagem com IA |
+| `/agendar-consulta`, `/agendar-exame` | Paciente | Agendamentos |
+| `/consultas-agendadas` | Paciente | Histórico |
+| `/buscar-ubs`, `/resultado-exames`, `/historico-vacinas`, `/minha-ficha-saude` | Paciente | Serviços |
+| `/dashboard-medico` | Médico | Painel do médico |
+| `/dashboard-medico/fila` | Médico | Fila por gravidade |
+| `/dashboard-medico/consultas`, `/dashboard-medico/indicadores` | Médico | Consultas do dia e indicadores |
+| `/dashboard-administrador` | Admin | Indicadores SQL e visão geral |
+| `/admin/usuarios` | Admin | Gestão de usuários |
 
 ## 📁 Estrutura
-app/src/
-├── app/ # Páginas (Next.js App Router)
-├── components/ # Componentes reutilizáveis
-└── lib/ # Simulação de banco de dados (localStorage)
 
-## ⚠️ Aviso técnico
+```
+app/
+├── public/                 # imagens e logo
+├── src/app/                # páginas (Next.js App Router)
+│   └── api/                # rotas do servidor: triagem e chatbot (chamam a IA)
+├── src/components/         # componentes (home, layout, admin, medico, ui...)
+└── src/lib/                # sessão, regras de triagem, utilitários
+```
 
-Este é um projeto acadêmico em desenvolvimento incremental. Limitações conhecidas atuais:
+## 🔒 Segurança e LGPD
 
-- Autenticação e dados são simulados via `localStorage` do navegador — não há back-end conectado ainda (em desenvolvimento no repositório [conectasaudebe](https://github.com/gt-hackgov/conectasaudebe)).
-- Não há verificação real de perfil (qualquer usuário pode escolher "paciente" ou "médico" no login).
-- Dados de indicadores e score de risco são fictícios, para fins de demonstração.
+- O relato da triagem não é salvo nem registrado em log.
+- A fila mostra só as iniciais do paciente, sem CPF.
+- O acesso é controlado por perfil no servidor. As senhas são guardadas com BCrypt, e o token tem validade.
+- A trilha de auditoria registra as ações sensíveis.
+- As chaves de IA ficam só no servidor (`.env.local`) e nunca no navegador ou no GitHub.
+
+## ⚠️ Limitações conhecidas
+
+- O login gov.br é **simulado** (o botão é visual).
+- O banco H2 é **em memória** e os dados de atendimento são **sintéticos**.
+- Ainda não há integração com sistemas reais do SUS (RNDS, CNES). Essas integrações estão previstas como próximos passos.
+- A IA dá **orientação e não diagnóstico**. Em emergência, ligue 192.
+
+---
 
 ## 🌿 Fluxo de contribuição
 
-Este projeto segue o fluxo: branches novas a partir de `develop` → Pull Request para `develop` → validação → merge de `develop` para `main` ao final de cada fase.
+Branches novas a partir de `develop` → Pull Request para `develop` (com build verde e aprovação de outro integrante) → `develop` é promovida para `main` ao final de cada fase.
 
 ```bash
 git checkout develop
 git pull
 git checkout -b feat/nome-da-sua-task
+# ...alterações...
+git add .
+git commit -m "feat: descrição curta"
+git push -u origin feat/nome-da-sua-task
 ```
+
+Prefixos usados nos commits e branches: `feat:` (nova funcionalidade), `fix:` (correção), `design:` (visual), `docs:` (documentação), `chore:` (manutenção).
+
+## 👥 Equipe
+
+| Integrante | GitHub |
+|---|---|
+| Bruna Boschi Santos | [@bruboschi](https://github.com/bruboschi) |
+| Gabriela de Carvalho Gonçalves | [@gabcrvlh](https://github.com/gabcrvlh) |
+| Lívia Scoralick | [@lilicoralick](https://github.com/lilicoralick) |
+| Michael Marotto | [@marottomichael](https://github.com/marottomichael) |
+| Davi Grabalos | [@davigrabalos](https://github.com/davigrabalos) |
+
+Projeto HackGov · FIAP · 2026

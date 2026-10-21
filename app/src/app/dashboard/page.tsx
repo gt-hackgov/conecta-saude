@@ -9,7 +9,6 @@ import {
   FileText,
   HeartPulse,
   Siren,
-  LogOut,
   MapPin,
   MessageCircle,
   ShieldCheck,
@@ -157,11 +156,6 @@ export default function DashboardPage() {
     return `Olá, ${userName}!`;
   }, [userName]);
 
-  const handleLogout = () => {
-    removeSession();
-    router.push("/");
-  };
-
   if (!checkedAuth || !isPaciente) {
     return null;
   }
@@ -173,7 +167,7 @@ export default function DashboardPage() {
         <div className="absolute top-1/3 -left-40 size-[420px] rounded-full bg-sky-200/30 blur-3xl dark:bg-sky-950/25" />
       </div>
 
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="mx-auto w-full max-w-[1600px]">
         <header className="sticky top-4 z-30 flex items-center justify-between gap-4 rounded-full bg-white/70 py-2.5 pr-2.5 pl-4 ring-1 ring-zinc-900/5 backdrop-blur-xl dark:bg-zinc-900/70 dark:ring-white/10">
           <div className="flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/25">
@@ -244,15 +238,6 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex h-10 items-center gap-2 rounded-full bg-zinc-900/5 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-900/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:bg-white/10 dark:text-zinc-100 dark:hover:bg-white/15"
-            >
-              <LogOut className="size-4" aria-hidden="true" />
-              Sair
-            </button>
           </div>
         </header>
 

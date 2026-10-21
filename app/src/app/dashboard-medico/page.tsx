@@ -32,8 +32,7 @@ export default function DashboardMedicoPage() {
       description="Acompanhe a rotina clínica com mais clareza e agilidade."
     >
       <section
-        className="relative mt-8 overflow-hidden rounded-2xl border border-sky-100 bg-sky-50 bg-cover bg-right bg-no-repeat"
-        style={{ backgroundImage: "url('/banner-medico.png')" }}
+        className="relative mt-8 overflow-hidden rounded-2xl border border-sky-100 bg-sky-50 bg-cover bg-right bg-no-repeat md:bg-[url('/banner-medico.png')]"
       >
         <div className="relative max-w-xl px-6 py-8 sm:px-10 sm:py-10">
           <p className="text-[11px] font-semibold tracking-[0.18em] text-sky-700 uppercase">

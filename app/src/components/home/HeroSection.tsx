@@ -11,7 +11,7 @@ export function HeroSection() {
         Cuidado que <span className="text-primary">te acompanha</span> em cada etapa.
       </h1>
 
-      <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
+      <p className="text-base leading-relaxed text-zinc-700 sm:text-lg dark:text-zinc-300">
         Agende consultas, acompanhe os resultados dos seus exames e encontre a UBS mais próxima de
         você. Tudo em um só lugar, com seus dados protegidos do começo ao fim.
       </p>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getSession } from "@/lib/authSession";
+import { AnalisesEstatisticas, type Analise } from "@/components/admin/AnalisesEstatisticas";
 
 /**
  * Indicadores de gestão calculados no back-end com SQL (GET /api/admin/indicadores).
@@ -18,7 +19,7 @@ type Resumo = {
   periodoInicio: string | null;
   periodoFim: string | null;
 };
-type Indicadores = { fonteDados: string; resumo: Resumo; consultas: Consulta[] };
+type Indicadores = { fonteDados: string; resumo: Resumo; consultas: Consulta[]; analises?: Analise[] };
 
 const DIAS = ["", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 const MESES = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -194,6 +195,8 @@ export function IndicadoresSql() {
           );
         })}
       </section>
+
+      <AnalisesEstatisticas analises={dados.analises} />
     </>
   );
 }
